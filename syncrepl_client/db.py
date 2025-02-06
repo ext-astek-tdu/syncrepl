@@ -22,7 +22,6 @@ from sys import version_info
 
 from . import exceptions
 
-
 # Define a custom column column type for our attribute lists, which
 # automatically calls pickle to deserialize it before handing the results to us.
 # Unfortunately, we can't easily/cleanly do this in the other direction,
@@ -39,7 +38,7 @@ sqlite3.register_converter("OBJECT", pickle.loads)
 CURRENT_SCHEMA_VERSION = 1
 
 
-class DBInterface(object):
+class DBInterface:
     """A connection to the syncrepl state database.
 
     The purpose of the Syncrepl protocol is for the LDAP client to have, by the
@@ -287,14 +286,14 @@ class DBInterface(object):
             raise exceptions.SchemaVersionError(
                 f"Schema version {schema_version} is too new for us!"
             )
-        self._validate_schema(self.__db, schema_version)
+        self._validate_schema(schema_version)
         if schema_version < CURRENT_SCHEMA_VERSION:
             self._upgrade_schema(self.__db, schema_version)
 
         # Woooo, schema check/upgrade complete!
 
     @classmethod
-    def _validate_schema(cls, db, version):
+    def _validate_schema(cls, version):
         # If the schema version is higher than we know, error out.
         if version > CURRENT_SCHEMA_VERSION:
             raise exceptions.SchemaVersionError("Schema too new")

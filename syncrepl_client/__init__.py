@@ -15,34 +15,24 @@ with this distribution, and also at
 https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
 """
 
-
 import pickle
-import signal
 import sqlite3
 from enum import Enum
-from sys import argv, exit, version_info
+from sys import version_info
+import threading
+from collections.abc import Iterator, Mapping
 
 import ldap
+import ldap.sasl
 import ldapurl
 from ldap.ldapobject import SimpleLDAPObject
 from ldap.syncrepl import SyncreplConsumer
 
-# Bring in some stuff from this package.
+from syncrepl_client.callbacks import BaseCallback
+
 from . import _version, db, exceptions
 
 __version__ = _version.__version__
-
-try:
-    import threading
-except ImportError:
-    import dummy_threading as threading
-
-# From Python 3.3+, Mapping is in collections.abc.
-# In Python 2, and Python ≤ 3.2, Mapping is in collections.
-if (version_info[0] == 3) and (version_info[1] >= 3):
-    from collections.abc import Iterator, Mapping
-else:
-    from collections import Iterator, Mapping
 
 
 class SyncreplMode(Enum):
@@ -287,7 +277,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__please_stop = False
         self.__please_stop_lock = threading.Lock()
 
-        # TODO: Make sure callback is a subclass or subclass instance.
+        assert issubclass(callback, BaseCallback)
         self.callback = callback
 
         # Check that we have a valid mode
@@ -400,7 +390,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             )
 
         # If ldap_url exists, and isn't an object, then convert it
-        if (ldap_url is not None) and (type(ldap_url) is not ldapurl.LDAPUrl):
+        if (ldap_url is not None) and not isinstance(ldap_url, ldapurl.LDAPUrl):
             try:
                 ldap_url = ldapurl.LDAPUrl(ldap_url)
             except Exception as err:
@@ -452,7 +442,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if ldap_url.who is None:
             self.simple_bind_s()
         elif ldap_url.who == "GSSAPI":
-            import ldap.sasl
 
             sasl_bind = ldap.sasl.gssapi()
             self.sasl_interactive_bind_s("", sasl_bind)
@@ -501,7 +490,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
     @staticmethod
     def throw_closederror(*args, **kwargs):
-        # Special Monkey-Patching method!
+        """Special Monkey-Patching method!"""
         raise exceptions.ClosedError()
 
     def unbind(self):
@@ -546,7 +535,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__exit__ = self.throw_closederror
         self.please_stop = self.throw_closederror
         self.poll = self.throw_closederror
-        self.sync = self.throw_closederror
         self.syncrepl_get_cookie = self.throw_closederror
         self.syncrepl_set_cookie = self.throw_closederror
         self.syncrepl_refreshdone = self.throw_closederror
@@ -850,6 +838,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             We implement the methods needed for a Dictionary.
             The keys are DNs; the values are attribute dicts.
             """
+
             # The only thing we need is a database cursor.
             def __init__(self, cursor):
                 # Let the superclass set itself up.
@@ -864,7 +853,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 self.__syncrepl_list = None
 
                 # We also make a place to cache entries we've pulled.
-                self.__syncrepl_attrlist = dict()
+                self.__syncrepl_attrlist = {}
 
             def __del__(self):
                 try:
@@ -906,7 +895,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 if row is not None:
                     self.__syncrepl_attrlist[dn] = row[0]
                     return row[0]
-                
+
                 raise KeyError(dn)
 
             def __iter__(self):
@@ -920,6 +909,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                     NOTE: The only reason we just need a local index, is because
                     this object is read-only.
                     """
+
                     def __init__(self, item_list):
                         self.i = 0
                         self.item_list = item_list

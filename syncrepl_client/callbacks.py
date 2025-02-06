@@ -20,7 +20,7 @@ from __future__ import print_function
 from sys import stdout
 
 
-class BaseCallback(object):
+class BaseCallback:
     """
 
     :class:`BaseCallback` is a class containing all of the callbacks which
