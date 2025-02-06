@@ -1007,8 +1007,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             # possible we are replaying an operation.
             if dn is None:
                 raise exceptions.DBConsistencyWarning(
-                    "Attempted to delete UUID %d from the database, but it "
-                    "does not exist!" % (uuid,)
+                    f"Attempted to delete UUID {uuid} from the database, but it does not exist!"
                 )
                 return
 

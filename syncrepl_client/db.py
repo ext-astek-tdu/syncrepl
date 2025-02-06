@@ -306,7 +306,7 @@ class DBInterface(object):
         # Then, if not the latest, upgrade!
         if schema_version > CURRENT_SCHEMA_VERSION:
             raise exceptions.SchemaVersionError(
-                "Schema version %d is too new for us!" % schema_version
+                f"Schema version {schema_version} is too new for us!"
             )
         self._validate_schema(self.__db, schema_version)
         if schema_version < CURRENT_SCHEMA_VERSION:
@@ -430,11 +430,11 @@ class DBInterface(object):
         """
         if not isinstance(setting, str):
             raise exceptions.DBSettingError(
-                "Setting name is not a string." % (setting,)
+                "Setting name is not a string."
             )
         if version_info[0] >= 3 and not isinstance(value, bytes):
             raise exceptions.DBSettingError(
-                'Value for setting "%s" is not a bytes.' % (setting,)
+                f'Value for setting "{setting}" is not a bytes.'
             )
         if (
             version_info[0] < 3
@@ -442,7 +442,7 @@ class DBInterface(object):
             and not isinstance(value, bytes)
         ):
             raise exceptions.DBSettingError(
-                'Value for setting "%s" is not a str or bytes.' % (setting,)
+                f'Value for setting "{setting}" is not a str or bytes.'
             )
 
         self.__db.execute(

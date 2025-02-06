@@ -41,11 +41,7 @@ class VersionError(Exception):
         self.component = which
 
     def __str__(self):
-        return "%s is version %s, but we are %s" % (
-            self.component,
-            self.their_version,
-            self.our_version,
-        )
+        return f"{self.component} is version {self.their_version}, but we are {self.our_version}"
 
 
 class VersionJumpError(VersionError):
@@ -55,10 +51,7 @@ class VersionJumpError(VersionError):
     that are not supported.
     """
     def __str__(self):
-        return "Can not jump from Python %d to Python %d" % (
-            self.their_version,
-            self.our_version,
-        )
+        return f"Can not jump from Python {self.their_version} to Python {self.our_version}"
 
 
 class ClosedError(Exception):
