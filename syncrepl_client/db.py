@@ -136,8 +136,6 @@ class DBInterface(object):
         # Check (and, if necessary, upgrade) our schema.
         self._check_and_upgrade_schema()
 
-        # We are ready to go!
-        return None
 
     def clone(self):
         """Clones an existing DBInterface, making an additional connection.

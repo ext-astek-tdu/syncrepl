@@ -485,7 +485,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
         # All done!  Commit any client-changed stuff, and return.
         self.__db.commit()
-        return None
 
     def __enter__(self):
         # Required for the context-manager protocol, but we don't do anything
@@ -644,7 +643,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__please_stop_lock.acquire()
         self.__please_stop = True
         self.__please_stop_lock.release()
-        return None
 
     def poll(self):
         """Poll the LDAP server for changes.
