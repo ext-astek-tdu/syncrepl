@@ -72,7 +72,9 @@ argp.add_argument(
     help="Use STARTTLS after connection, but before binding (use with ldap schema only).",
 )
 argp.add_argument(
-    "url", type=str, help="An LDAP URL with all information required to do work."
+    "url",
+    type=str,
+    help="An LDAP URL with all information required to do work.",
 )
 argp.add_argument(
     "prefix", type=str, help="A path and filename prefix, to store data files."

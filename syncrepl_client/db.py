@@ -9,7 +9,7 @@
 # This file is made available under the terms of the BSD 3-Clause License,
 # the text of which may be found in the file `LICENSE.md` that was included
 # with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md 
+# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
 #
 # The Python docstrings contained in this file are also made available under the terms
 # of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
@@ -38,7 +38,7 @@ except ImportError:
 # automatically calls pickle to deserialize it before handing the results to us.
 # Unfortunately, we can't easily/cleanly do this in the other direction,
 # because register_adapter works on entire types, not on column names.
-sqlite3.register_converter('OBJECT', pickle.loads)
+sqlite3.register_converter("OBJECT", pickle.loads)
 
 
 # This is the current schema version number.
@@ -99,7 +99,7 @@ class DBInterface(object):
 
         Please do not optimize or vacuum on your own, as those operations are
         already being performed:
-        
+
         * A vacuum takes place after the refresh_done callback completes.
 
         * An optimize is run after the refresh_done callback completes, before
@@ -112,7 +112,6 @@ class DBInterface(object):
     If you are unable to observe the notes and warnings above, please use your
     own database.
     """
-
 
     def __init__(self, data_path):
         """Connect to our database, creating/upgrading it if necessary.
@@ -138,19 +137,18 @@ class DBInterface(object):
         # Open our database file
         self.__data_path = data_path
         self.__db = None
-        self.__db = sqlite3.connect(data_path,
-            detect_types = sqlite3.PARSE_DECLTYPES
+        self.__db = sqlite3.connect(
+            data_path, detect_types=sqlite3.PARSE_DECLTYPES
         )
 
         # Set our synchronous level to FULL.
-        self.__db.execute('PRAGMA synchronous = NORMAL')
+        self.__db.execute("PRAGMA synchronous = NORMAL")
 
         # Check (and, if necessary, upgrade) our schema.
         self._check_and_upgrade_schema()
 
         # We are ready to go!
         return None
-
 
     def clone(self):
         """Clones an existing DBInterface, making an additional connection.
@@ -176,11 +174,10 @@ class DBInterface(object):
         newbie = DBInterface.__new__(DBInterface)
         newbie.__db = None
         newbie.__data_path = self.__data_path
-        newbie.__db = sqlite3.connect(self.__data_path,
-            detect_types = sqlite3.PARSE_DECLTYPES
+        newbie.__db = sqlite3.connect(
+            self.__data_path, detect_types=sqlite3.PARSE_DECLTYPES
         )
         return newbie
-
 
     def cursor(self):
         """Returns a sqlite3 cursor connected to this database.
@@ -192,7 +189,6 @@ class DBInterface(object):
             Do not use the returned cursor outside of this thread!
         """
         return self.__db.cursor()
-
 
     def execute(self, statement, params=None):
         """Execute a statement, and return the cursor.
@@ -212,18 +208,13 @@ class DBInterface(object):
         else:
             return self.__db.execute(statement)
 
-    
     def commit(self):
-        """Commit the current transaction.
-        """
+        """Commit the current transaction."""
         self.__db.commit()
 
-
     def rollback(self):
-        """Roll back the current transaction.
-        """
+        """Roll back the current transaction."""
         self.__db.rollback()
-
 
     def interrupt(self):
         """Interrupt all in-flight SQL queries.
@@ -233,15 +224,13 @@ class DBInterface(object):
         """
         self.__db.interrupt()
 
-
     def optimize(self):
         """Runs the `optimize` pragma.
 
         SQLite suggests running this when closing a datbase connection, and
         also after every few hours of continuous operation.
         """
-        self.execute('PRAGMA optimize')
-
+        self.execute("PRAGMA optimize")
 
     def vacuum(self):
         """Run a vacuum.
@@ -250,9 +239,8 @@ class DBInterface(object):
 
             This method is already called at the end of the refresh phase.
         """
-        self.execute('VACUUM')
+        self.execute("VACUUM")
 
-    
     def _check_and_upgrade_schema(self):
         """Check (and, if needed, upgrade) a database's schema.
 
@@ -278,7 +266,8 @@ class DBInterface(object):
         # Let's see what tables we have.
         # We search for all table names that we've ever used.
         discovered_tables = list()
-        c = self.__db.execute('''
+        c = self.__db.execute(
+            """
             SELECT name
               FROM sqlite_master
              WHERE (type='table') AND (name IN (
@@ -287,7 +276,8 @@ class DBInterface(object):
                        'syncrepl_settings'
                        )
                    )
-        ''')
+        """
+        )
         for discovered_table in c.fetchall():
             discovered_tables.append(discovered_table[0])
 
@@ -299,16 +289,16 @@ class DBInterface(object):
 
         # Grab the list of tables, and make sure our version-number-containing
         # table is present.
-        if 'syncrepl_schema' not in discovered_tables:
-            raise exceptions.DBSchemaError('No schema table found')
+        if "syncrepl_schema" not in discovered_tables:
+            raise exceptions.DBSchemaError("No schema table found")
 
         # Grab the schema version number from the table
-        c.execute('SELECT version FROM syncrepl_schema')
+        c.execute("SELECT version FROM syncrepl_schema")
         schema_version = c.fetchall()
         if len(schema_version) == 0:
-            raise exceptions.DBSchemaError('Schama table with no entries')
+            raise exceptions.DBSchemaError("Schama table with no entries")
         if len(schema_version) > 1:
-            raise exceptions.DBSchemaError('Too many version entries')
+            raise exceptions.DBSchemaError("Too many version entries")
         schema_version = schema_version[0][0]
 
         # Error out if the DB schema is too new.
@@ -316,7 +306,7 @@ class DBInterface(object):
         # Then, if not the latest, upgrade!
         if schema_version > CURRENT_SCHEMA_VERSION:
             raise exceptions.SchemaVersionError(
-                'Schema version %d is too new for us!' % schema_version
+                "Schema version %d is too new for us!" % schema_version
             )
         self._validate_schema(self.__db, schema_version)
         if schema_version < CURRENT_SCHEMA_VERSION:
@@ -324,22 +314,20 @@ class DBInterface(object):
 
         # Woooo, schema check/upgrade complete!
 
-
     @classmethod
     def _validate_schema(cls, db, version):
         # If the schema version is higher than we know, error out.
         if version > CURRENT_SCHEMA_VERSION:
-            raise exceptions.SchemaVersionError('Schema too new')
+            raise exceptions.SchemaVersionError("Schema too new")
 
         # Schema version zero should not be coming to us.
         if version == 0:
-            raise exceptions.DBSchemaError('Schema version zero is implicit.')
+            raise exceptions.DBSchemaError("Schema version zero is implicit.")
 
         # Now we can validate the schema against the stated version.
 
         elif version == 1:
             pass
-
 
     @classmethod
     def _upgrade_schema(cls, db, old_version):
@@ -351,7 +339,8 @@ class DBInterface(object):
 
         # Start by upgrading us from version 0 to version 1.
         elif old_version == 0:
-            db.executescript('''
+            db.executescript(
+                """
                 PRAGMA journal_mode = WAL;
 
                 CREATE TABLE syncrepl_schema (
@@ -374,8 +363,9 @@ class DBInterface(object):
                 );
 
                 INSERT INTO syncrepl_schema (version) VALUES (1);
-            ''')
-            
+            """
+            )
+
             # Hand us off to upgrade us from version 1 to whatever we're at now.
             db.commit()
             return cls._upgrade_schema(db, 1)
@@ -384,8 +374,7 @@ class DBInterface(object):
 
         # Finally, catch cases where the schema is too new.
         elif old_version > CURRENT_SCHEMA_VERSION:
-            raise exceptions.SchemaVersionError('Schema too new')
-
+            raise exceptions.SchemaVersionError("Schema too new")
 
     def get_setting(self, setting):
         """Get a setting from the syncrepl_settings table
@@ -397,11 +386,13 @@ class DBInterface(object):
         Returns a setting from the `syncrepl_settings` table, converted back
         into the object it previously was.
         """
-        c = self.__db.execute('''
+        c = self.__db.execute(
+            """
             SELECT value
               FROM syncrepl_settings
              WHERE name = ?
-        ''', (setting,)
+        """,
+            (setting,),
         )
 
         # We either get one result, or none, since we searched on the key.
@@ -410,7 +401,6 @@ class DBInterface(object):
             return None
         else:
             return r[0]
-
 
     def set_setting(self, setting, value):
         """Store a setting into the syncrepl_settings table.
@@ -440,24 +430,27 @@ class DBInterface(object):
         """
         if not isinstance(setting, str):
             raise exceptions.DBSettingError(
-                'Setting name is not a string.' % (setting,)
+                "Setting name is not a string." % (setting,)
             )
         if version_info[0] >= 3 and not isinstance(value, bytes):
             raise exceptions.DBSettingError(
                 'Value for setting "%s" is not a bytes.' % (setting,)
             )
-        if (    version_info[0] < 3
+        if (
+            version_info[0] < 3
             and not isinstance(value, str)
             and not isinstance(value, bytes)
-            ):
+        ):
             raise exceptions.DBSettingError(
                 'Value for setting "%s" is not a str or bytes.' % (setting,)
             )
 
-        self.__db.execute('''
+        self.__db.execute(
+            """
             INSERT OR REPLACE
                          INTO syncrepl_settings
                               (name, value)
                        VALUES (?, ?)
-        ''', (setting, value)
+        """,
+            (setting, value),
         )

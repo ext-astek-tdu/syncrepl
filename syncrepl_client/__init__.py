@@ -9,7 +9,7 @@
 # This file is made available under the terms of the BSD 3-Clause License,
 # the text of which may be found in the file `LICENSE.md` that was included
 # with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md 
+# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
 #
 # The Python docstrings contained in this file are also made available under the terms
 # of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
@@ -28,6 +28,7 @@ import pickle
 import signal
 import sqlite3
 from sys import argv, exit, version_info
+
 try:
     import threading
 except ImportError:
@@ -35,7 +36,7 @@ except ImportError:
 
 # From Python 3.3+, Mapping is in collections.abc.
 # In Python 2, and Python ≤ 3.2, Mapping is in collections.
-if ((version_info[0] == 3) and (version_info[1] >= 3)):
+if (version_info[0] == 3) and (version_info[1] >= 3):
     from collections.abc import Iterator, Mapping
 else:
     from collections import Iterator, Mapping
@@ -56,14 +57,14 @@ class SyncreplMode(Enum):
     the existing instance, and start a new instance in the new mode.
     """
 
-    REFRESH_ONLY = 'refreshOnly'
+    REFRESH_ONLY = "refreshOnly"
     """
     In this mode, the syncrepl search will last long enough to bring you in
     sync with the server.  Once you are in sync,
     :meth:`~syncrepl_client.Syncrepl.poll()` will return :obj:`False`.
     """
-    
-    REFRESH_AND_PERSIST = 'refreshAndPersist'
+
+    REFRESH_AND_PERSIST = "refreshAndPersist"
     """
     In this mode, you start out doing a refresh.  Once the refresh is complete,
     subsequent calls to :meth:`~syncrepl_client.Syncrepl.poll` will be used to
@@ -85,25 +86,25 @@ class SyncreplMode(Enum):
 
 
 class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
-    '''
+    """
     This class implements the Syncrepl client.  You should have one instance of
     this class for each syncrepl search.
 
     Each class requires several items, which will be discussed here:
 
     * **A data store**
-      
+
       The Syncrepl client stores a copy of all LDAP records returned by the
       LDAP server.  This data is stored on disk to speed up synchronization if
       the client loses connection to the LDAP server (either intentionally or
       not).
-      
+
       The Syncrepl class writes to several files, so the class will be given a
       `data_path`.  To come up with the actual file paths, we concatenate
       `data_path` and our file name.  For that reason, `data_path` should
       normally end with a slash (forward or back, depending on OS), to keep our
       data files in its own directory.
-    
+
       The data store files should be deleted any time you want a completely
       fresh start.  The data store files will also be wiped any time the
       syncrepl_client software version changes.
@@ -115,7 +116,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         versa—will likely trigger an exception during instantiation.
 
     * **A callback class**
-      
+
       The callback class is an object (a class, or an instance).  The callback
       class' methods are called when the Syncrepl client receives updates.
 
@@ -130,7 +131,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
       :class:`~syncrepl_client.callbacks.LoggingCallback` class.
 
     * **An LDAP URL**
-      
+
       The LDAP URL contains all information about how the Syncrepl client
       should connect, what credentials should be used to connect, and how the
       search should be performed.
@@ -151,7 +152,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
       using particular LDAP URL extensions:
 
       * *Anonymous bind*: Do not set a bind DN or password.
-      
+
       * *Simple bind*: Set the bind DN and password as part of the URL.
 
         The `bindname` LDAP URL extension is used to hold the bind DN, and the
@@ -177,14 +178,16 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
     Methods are defined below.  Almost all methods are documented, including
     internal methods.
-    
+
     .. warning::
       Methods whose names start with `syncrepl_` are internal
       methods, which clients **must not call**.  That being said, the methods
       are still being documented here, for educational purposes.
-    '''
+    """
 
-    def __init__(self, data_path, callback, mode, ldap_url=None, starttls=False, **kwargs):
+    def __init__(
+        self, data_path, callback, mode, ldap_url=None, starttls=False, **kwargs
+    ):
         """Instantiate, connect to an LDAP server, and bind.
 
         :param str data_path: A path to the database file.
@@ -292,7 +295,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.callback = callback
 
         # Check that we have a valid mode
-        assert(isinstance(mode, SyncreplMode))
+        assert isinstance(mode, SyncreplMode)
 
         # Connect to (and, if necessary, initialize) our database.
         # We pre-set each variable, so we know what's been done if we have to
@@ -301,47 +304,49 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__db = db.DBInterface(data_path)
 
         # Before accessing data, check our Python major version.
-        major_c = self.__db.execute('''
+        major_c = self.__db.execute(
+            """
             SELECT major
               FROM syncrepl_pyversion
-        ''')
+        """
+        )
         major_v = major_c.fetchall()
         major_c.close()
 
         # If no major version was found, then we're a new database.
         # Store the major Python version.
         if len(major_v) == 0:
-            self.__db.execute('''
+            self.__db.execute(
+                """
                 INSERT
                   INTO syncrepl_pyversion
                        (major)
                 VALUES (?)
-            ''', (version_info[0],)
+            """,
+                (version_info[0],),
             )
         # Multiple entries is a problem.
         elif len(major_v) > 1:
-            raise exceptions.DBError('Missing entry in syncrepl_pyversion.')
+            raise exceptions.DBError("Missing entry in syncrepl_pyversion.")
         # If one record is found, check the Python version.
         # Fail any attempts to move to a different version.
         elif major_v[0][0] != version_info[0]:
-                raise exceptions.VersionJumpError(
-                    which='python',
-                    ours=version_info[0],
-                    db=major_v[0][0]
-                )
+            raise exceptions.VersionJumpError(
+                which="python", ours=version_info[0], db=major_v[0][0]
+            )
 
         # At this point, our major Python versions are the same!
         # We can now move on to the more-specific version checks.
 
         # If the specific versions are missing, then set them now.
-        if (    (self.__db.get_setting('syncrepl_version') is None)
-            and (self.__db.get_setting('syncrepl_pyversion') is None)
+        if (self.__db.get_setting("syncrepl_version") is None) and (
+            self.__db.get_setting("syncrepl_pyversion") is None
         ):
-            self.__db.set_setting('syncrepl_version',
-                pickle.dumps(_version.__version_tuple__)
+            self.__db.set_setting(
+                "syncrepl_version", pickle.dumps(_version.__version_tuple__)
             )
-            self.__db.set_setting('syncrepl_pyversion',
-                pickle.dumps(tuple(version_info))
+            self.__db.set_setting(
+                "syncrepl_pyversion", pickle.dumps(tuple(version_info))
             )
 
         # Make a small function to compare version tuples.
@@ -358,23 +363,19 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 Only the first three components are compared.
             """
             # A simple loop over each component
-            for i in (0,1,2):
+            for i in (0, 1, 2):
                 # Check for difference, fall through to next if the same.
-                if a[i]<b[i]:
+                if a[i] < b[i]:
                     return -1
-                elif a[i]>b[i]:
+                elif a[i] > b[i]:
                     return 1
             return 0
 
         # Check our specifc versions, and throw if we're too new.
         # Otherwise, upgrade!
         # NOTE: Our major version check was done above.
-        db_pyversion = pickle.loads(
-            self.__db.get_setting('syncrepl_pyversion')
-        )
-        db_version = pickle.loads(
-            self.__db.get_setting('syncrepl_version')
-        )
+        db_pyversion = pickle.loads(self.__db.get_setting("syncrepl_pyversion"))
+        db_version = pickle.loads(self.__db.get_setting("syncrepl_version"))
         db_pyversion_compare = compare_versions(
             db_pyversion, tuple(version_info)
         )
@@ -383,36 +384,34 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         )
         if db_pyversion_compare == 1:
             raise exceptions.VersionError(
-                which='python',
+                which="python",
                 ours=tuple(version_info),
                 db=db_pyversion,
             )
         elif db_pyversion_compare == -1:
             self.__db.set_setting(
-                'syncrepl_pyversion',
-                pickle.dumps(tuple(version_info))
+                "syncrepl_pyversion", pickle.dumps(tuple(version_info))
             )
         if db_version_compare == 1:
             raise exceptions.VersionError(
-                which='syncrepl_client',
+                which="syncrepl_client",
                 ours=_version.__version_tuple_,
-                db=db_version
+                db=db_version,
             )
         elif db_version_compare == -1:
             self.__db.set_setting(
-                'syncrepl_version',
-                pickle.dumps(_version.__version_tuple__)
+                "syncrepl_version", pickle.dumps(_version.__version_tuple__)
             )
 
         # If ldap_url exists, and isn't an object, then convert it
-        if ((ldap_url is not None) and (type(ldap_url) is not ldapurl.LDAPUrl)):
+        if (ldap_url is not None) and (type(ldap_url) is not ldapurl.LDAPUrl):
             try:
                 ldap_url = ldapurl.LDAPUrl(ldap_url)
             except:
                 raise exceptions.LDAPURLParseError(ldap_url)
 
         # Grab the DB-stored URL.  If found, parse.
-        db_url = self.__db.get_setting('syncrepl_url')
+        db_url = self.__db.get_setting("syncrepl_url")
         if db_url is not None:
             db_url = ldapurl.LDAPUrl(pickle.loads(db_url))
 
@@ -421,9 +420,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if db_url is None:
             if ldap_url is None:
                 raise exceptions.LDAPUrlError
-            self.__db.set_setting('syncrepl_url',
-                pickle.dumps(str(ldap_url))
-            )
+            self.__db.set_setting("syncrepl_url", pickle.dumps(str(ldap_url)))
 
         # Check if someone's trying to change the existing LDAP URL.
         if db_url is not None and ldap_url != db_url:
@@ -433,11 +430,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
             # If the stored URL doesn't match the passed URL,
             # _and_ one of our invariant attributes is different, fail.
-            if ((current_url.dn != new_url.dn) or
-                (current_url.attrs != new_url.attrs) or
-                (current_url.scope != new_url.scope) or
-                (current_url.filterstr != new_url.filterstr)
-               ):
+            if (
+                (current_url.dn != new_url.dn)
+                or (current_url.attrs != new_url.attrs)
+                or (current_url.scope != new_url.scope)
+                or (current_url.filterstr != new_url.filterstr)
+            ):
                 raise exceptions.LDAPUrlConflict(current_url, new_url)
 
             # We allow changes to other attributes (like host, who, and cred)
@@ -445,9 +443,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             # example, due to differing ACLs between accounts).
 
             # Since we haven't thrown, allow the new URL.
-            self.__db.set_setting('syncrepl_url',
-                pickle.dumps(str(new_url))
-            )
+            self.__db.set_setting("syncrepl_url", pickle.dumps(str(new_url)))
 
         # Finally, we can set up our LDAP client!
         SimpleLDAPObject.__init__(self, ldap_url.initializeUrl(), **kwargs)
@@ -459,10 +455,11 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # Bind to the server (this also triggers connection setup)
         if ldap_url.who is None:
             self.simple_bind_s()
-        elif ldap_url.who == 'GSSAPI':
+        elif ldap_url.who == "GSSAPI":
             import ldap.sasl
+
             sasl_bind = ldap.sasl.gssapi()
-            self.sasl_interactive_bind_s('',sasl_bind)
+            self.sasl_interactive_bind_s("", sasl_bind)
         else:
             self.simple_bind_s(who=ldap_url.who, cred=ldap_url.cred)
 
@@ -477,27 +474,27 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # Before we start, we have to check if a filter was set.  If not, set the
         # default that the LDAP module uses.
         if ldap_url.filterstr is None:
-            ldap_url.filterstr = '(objectClass=*)'
+            ldap_url.filterstr = "(objectClass=*)"
         if ldap_url.scope is None:
             ldap_url.scope = ldapurl.LDAP_SCOPE_SUBTREE
 
         # Prepare the search
-        self.ldap_object_search = self.syncrepl_search(ldap_url.dn, ldap_url.scope,
+        self.ldap_object_search = self.syncrepl_search(
+            ldap_url.dn,
+            ldap_url.scope,
             mode=mode.value,
             filterstr=ldap_url.filterstr,
-            attrlist=ldap_url.attrs
+            attrlist=ldap_url.attrs,
         )
 
         # All done!  Commit any client-changed stuff, and return.
         self.__db.commit()
         return None
 
-
     def __enter__(self):
         # Required for the context-manager protocol, but we don't do anything
         # that the constructor doesn't do already.
         pass
-
 
     def __exit__(self, exception_type, value, traceback):
         # If we got an exception, let it raise.
@@ -507,12 +504,10 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # Otherwise, unbind
         return self.unbind()
 
-
     @staticmethod
     def throw_closederror(*args, **kwargs):
         # Special Monkey-Patching method!
         raise exceptions.ClosedError()
-
 
     def unbind(self):
         """Safely save state and disconnect from the LDAP server.
@@ -544,7 +539,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if self.__db is not None:
             # Do an optimize run when closing.
             self.__db.optimize()
-            del(self.__db)
+            del self.__db
         if self.__ldap_setup_complete is True:
             unbind_result = SimpleLDAPObject.unbind(self)
         else:
@@ -567,13 +562,11 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # Return the result from SimpleLDAPObject (or just True)
         return unbind_result
 
-
     def __del__(self):
         # Last-resort attempt to make sure things are cleaned up.
         # NOTE: If there was a problem in initialization, unbind will catch it.
         if self.deleted is not True:
             return self.unbind()
-
 
     def db(self):
         """Return a sqlite3 database instance for client use.
@@ -585,7 +578,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
         .. note::
 
-            The instance returned will be bound to the local thread.  
+            The instance returned will be bound to the local thread.
 
         .. warning::
 
@@ -593,7 +586,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             in the :class:`~syncrepl_client.db.DBInterface` class!
         """
         return self.__db.clone()
-
 
     def db_reconnect(self):
         """Close and reopen the database connection.
@@ -621,9 +613,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         """
         new_db = self.__db.clone()
         self.__db.interrupt()
-        del(self.__db)
+        del self.__db
         self.__db = new_db
-
 
     def please_stop(self):
         """Requests the safe termination of a Syncrepl search.
@@ -644,7 +635,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         When running in refresh-only mode, this does nothing: Interrupting a
         refresh is dangerous, because there is no guarantee that the updates
         from the LDAP server are being received in any particular order.  The
-        refresh will be allowed to complete, and then it is safe to stop. 
+        refresh will be allowed to complete, and then it is safe to stop.
 
         When running in refresh-and-persist mode, if the refresh phase is still
         in progress, it will be completed.  If in the persist phase, a Cancel
@@ -658,7 +649,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__please_stop = True
         self.__please_stop_lock.release()
         return None
-
 
     def poll(self):
         """Poll the LDAP server for changes.
@@ -698,8 +688,9 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # causes an exception (so the variable doesn't get set).
         poll_output = True
         try:
-            poll_output = self.syncrepl_poll(msgid=self.ldap_object_search,
-                    all=1, timeout=3)
+            poll_output = self.syncrepl_poll(
+                msgid=self.ldap_object_search, all=1, timeout=3
+            )
         # Timeout exceptions are totally OK, and should be ignored.
         except ldap.TIMEOUT:
             pass
@@ -733,7 +724,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         # Return.  The client will have to continue polling until the LDAP
         # server is done with us.
         return poll_output
-
 
     def run(self):
         """Run :meth:`~syncrepl_client.Syncrepl.poll` until it returns :obj:`False`.
@@ -800,7 +790,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             poll_result = False
             poll_result = self.poll()
 
-
     def syncrepl_get_cookie(self):
         """Get Syncrepl cookie from data store.
 
@@ -820,12 +809,11 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
 
         """
-        possible_cookie = self.__db.get_setting('syncrepl_cookie')
+        possible_cookie = self.__db.get_setting("syncrepl_cookie")
         if possible_cookie is None:
             return None
         else:
             return pickle.loads(possible_cookie)
-
 
     def syncrepl_set_cookie(self, cookie):
         """Store Syncrepl cookie in data store.
@@ -844,9 +832,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         reconnect, so that it knows how far behind we are.
         """
         self.callback.cookie_change(cookie)
-        self.__db.set_setting('syncrepl_cookie', pickle.dumps(cookie))
+        self.__db.set_setting("syncrepl_cookie", pickle.dumps(cookie))
         self.__db.commit()
-
 
     def syncrepl_refreshdone(self):
         """Mark the transition from the refresh phase to the persist phase.
@@ -893,10 +880,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
             def __syncrepl_populate(self):
                 rowlist = list()
-                self.__syncrepl_cursor.execute('''
+                self.__syncrepl_cursor.execute(
+                    """
                     SELECT dn
                       FROM syncrepl_records
-                ''')
+                """
+                )
                 for row in self.__syncrepl_cursor.fetchall():
                     rowlist.append(row[0])
                 self.__syncrepl_list = rowlist
@@ -911,11 +900,14 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
                 # Check for the DN in the DB.
                 # Cache the result for later use.
-                self.__syncrepl_cursor.execute('''
+                self.__syncrepl_cursor.execute(
+                    """
                     SELECT attributes
                       FROM syncrepl_records
                      WHERE dn = ?
-                ''', (dn,))
+                """,
+                    (dn,),
+                )
                 row = self.__syncrepl_cursor.fetchone()
                 if row is not None:
                     self.__syncrepl_attrlist[dn] = row[0]
@@ -935,6 +927,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                     def __init__(iterself, item_list):
                         iterself.i = 0
                         iterself.item_list = item_list
+
                     def __next__(iterself):
                         # Remember, i is zero-indexed
                         if iterself.i >= len(iterself.item_list):
@@ -963,9 +956,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.__db.commit()
         self.__db.optimize()
         self.__db.vacuum()
-        self.__db.execute('PRAGMA wal_checkpoint(RESTART)')
+        self.__db.execute("PRAGMA wal_checkpoint(RESTART)")
         del self.__present_uuids
-
 
     def syncrepl_delete(self, uuids):
         """Report deletion of an LDAP entry.
@@ -996,11 +988,14 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         c = self.__db.cursor()
         for uuid in uuids:
             # First, get our DN
-            c.execute('''
+            c.execute(
+                """
                 SELECT dn
                   FROM syncrepl_records
                  WHERE uuid = ?
-            ''', (uuid,))
+            """,
+                (uuid,),
+            )
             dn = c.fetchone()
 
             # If the DN doesn't exist, then that's a problem, because the LDAP
@@ -1008,17 +1003,20 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             # possible we are replaying an operation.
             if dn is None:
                 raise exceptions.DBConsistencyWarning(
-                    'Attempted to delete UUID %d from the database, but it '
-                    'does not exist!' % (uuid,)
+                    "Attempted to delete UUID %d from the database, but it "
+                    "does not exist!" % (uuid,)
                 )
                 return
 
             # Go ahead and delete (but don't commit yet!)
-            c.execute('''
+            c.execute(
+                """
                 DELETE
                   FROM syncrepl_records
                  WHERE uuid = ?
-            ''', (uuid,))
+            """,
+                (uuid,),
+            )
 
             # Do our callback.
             self.callback.record_delete(dn[0], c)
@@ -1028,7 +1026,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if self.__in_refresh is False:
             self.__db.commit()
         c.close()
-
 
     def syncrepl_present(self, uuids, refreshDeletes=False):
         """Indicate the presence or absence of an LDAP entry.
@@ -1059,7 +1056,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         sure which entries are present and which have been deleted.  In
         addition, if you have a cookie that is now too old, there is no way to
         know which entries in your data store still exist in the directory.
-        
+
         The "Present" messages, and the resulting calls, are used to bring us
         back in sync with the Directory, regardless of our local state.
 
@@ -1129,7 +1126,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         falls back to mode A.
         """
 
-        if ((uuids is not None) and (refreshDeletes is False)):
+        if (uuids is not None) and (refreshDeletes is False):
             # We have a list of items which are present in the directory.
             # Update our tracking list.
             self.__present_uuids.extend(uuids)
@@ -1137,17 +1134,19 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             # No need for a callback, because we already did that for each
             # entry received.
 
-        elif ((uuids is None) and (refreshDeletes is False)):
+        elif (uuids is None) and (refreshDeletes is False):
             # We're almost at the end of the refresh.  Every entry that we have
             # in state, but that didn't get a "present" message, has been
             # deleted!
             deleted_uuids = list()
 
             # Look through each UUID in the database.
-            c = self.__db.execute('''
+            c = self.__db.execute(
+                """
                 SELECT uuid
                   FROM syncrepl_records
-            ''')
+            """
+            )
             for db_uuid in c.fetchall():
                 # If the DB has a UUID _not_ in the present list, note it.
                 if db_uuid[0] not in self.__present_uuids:
@@ -1163,16 +1162,15 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             if len(deleted_uuids) > 0:
                 self.syncrepl_delete(deleted_uuids)
 
-        elif ((uuids is not None) and (refreshDeletes is True)):
+        elif (uuids is not None) and (refreshDeletes is True):
             # We have a list of items to delete.
             # `syncrepl_delete` will handle the callbacks.
             self.syncrepl_delete(uuids)
 
-        elif ((uuids is None) and (refreshDeletes is True)):
+        elif (uuids is None) and (refreshDeletes is True):
             # We're almsot at the end of the refresh.  There's nothing else to
             # do!
             pass
-
 
     def syncrepl_entry(self, dn, attrs, uuid):
         """Report addition or modification of an LDAP entry.
@@ -1234,11 +1232,14 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         c = self.__db.cursor()
 
         # First, we need to grab any existing entry from the DB.
-        c.execute('''
+        c.execute(
+            """
             SELECT dn, attributes
               FROM syncrepl_records
              WHERE uuid = ?
-        ''', (uuid,))
+        """,
+            (uuid,),
+        )
         db_record = c.fetchone()
 
         # If a DB record already exists, then we have a change of some sort.
@@ -1254,11 +1255,14 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 # But first, might the new DN already be in the map?
                 # Especially if we're being refreshed, we might have a small
                 # inconsistency.  So, check for the new DN.
-                c.execute('''
+                c.execute(
+                    """
                     SELECT uuid
                       FROM syncrepl_records
                      WHERE dn = ?
-                ''', (dn,))
+                """,
+                    (dn,),
+                )
                 possible_db_record = c.fetchone()
                 if possible_db_record is not None:
                     # We have an old record in the way.  Act like we got an
@@ -1267,32 +1271,40 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                     self.syncrepl_delete(old_uuid)
 
                 # Now we can update the DB with the new DN, and do the callback.
-                c.execute('''
+                c.execute(
+                    """
                     UPDATE syncrepl_records
                        SET dn = ?
                      WHERE uuid = ?
-                ''', (dn, uuid))
+                """,
+                    (dn, uuid),
+                )
                 self.callback.record_rename(db_dn, dn, c)
 
             # Now we've checked the DN, update the DB and do the callback.
             # NOTE: We have to pickle the attributes ourselves.
-            c.execute('''
+            c.execute(
+                """
                 UPDATE syncrepl_records
                    SET attributes = ?
                  WHERE uuid = ?
-            ''', (pickle.dumps(attrs), uuid))
+            """,
+                (pickle.dumps(attrs), uuid),
+            )
             self.callback.record_change(dn, db_attrs, attrs, c)
-
 
         # If we're here, then this UUID is new to us!
         else:
             # Just like before, we have to make sure our DN isn't already in
             # the database.
-            c.execute('''
+            c.execute(
+                """
                 SELECT uuid
                   FROM syncrepl_records
                  WHERE dn = ?
-            ''', (dn,))
+            """,
+                (dn,),
+            )
             possible_db_record = c.fetchone()
             if possible_db_record is not None:
                 # We have an old record in the way.  Act like we got an "item
@@ -1302,12 +1314,15 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
             # Now we can insert the record and do the add callback.
             # NOTE: We have to pickle the attributes ourselves.
-            c.execute('''
+            c.execute(
+                """
                 INSERT
                   INTO syncrepl_records
                        (uuid, dn, attributes)
                 VALUES (?, ?, ?)
-            ''', (uuid, dn, pickle.dumps(attrs)))
+            """,
+                (uuid, dn, pickle.dumps(attrs)),
+            )
             self.callback.record_add(dn, attrs, c)
 
         # Now that the inserts & callbacks are done, commit and close cursor.

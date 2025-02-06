@@ -9,7 +9,7 @@
 # This file is made available under the terms of the BSD 3-Clause License,
 # the text of which may be found in the file `LICENSE.md` that was included
 # with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md 
+# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
 #
 # The Python docstrings contained in this file are also made available under the terms
 # of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
@@ -129,9 +129,9 @@ class BaseCallback(object):
 
         :return: None -- any returned value is ignored.
 
-        When receiving this callback, you know that the refresh phase has 
-        completed, and your view of the directory is now consistent with the 
-        LDAP server (at least, the part of the directory which 
+        When receiving this callback, you know that the refresh phase has
+        completed, and your view of the directory is now consistent with the
+        LDAP server (at least, the part of the directory which
         matches your search and your access).
 
         :data:`items` is a dictionary (or, an object which behaves like a
@@ -199,13 +199,13 @@ class BaseCallback(object):
             :data:`attrs` is passed by reference.  If you modify the
             dictionary—or its contents—in any way, you will pay for it later!
 
-        This callback can happen in all modes, and in all phases, to indicate 
-        that an entry has been added to your view of the search results.  In 
-        refresh-only mode, and the refresh phase of refresh-and-perist mode, 
-        the addition may have taken place at any time since your last update.  
-        In the persist phase of refresh-and-persist mode, a new entry has just 
+        This callback can happen in all modes, and in all phases, to indicate
+        that an entry has been added to your view of the search results.  In
+        refresh-only mode, and the refresh phase of refresh-and-perist mode,
+        the addition may have taken place at any time since your last update.
+        In the persist phase of refresh-and-persist mode, a new entry has just
         been added—or modified—such that it matches your search.
-        
+
         Attributes which are not present in the record will not present in
         `attrs`.  Dict keys are attribute names, and dict values are arrays
         (to support multi-valued attributes).
@@ -219,7 +219,7 @@ class BaseCallback(object):
 
             Also, all attribute values will come in as (in Python 2) :obj:`str`
             objects or (in Python 3) :obj:`bytes` objects.
-            
+
             To learn which attributes are single- or multi-valued, and to learn
             the type (or, in LDAP terms, the *syntax*) of an attribute, you
             need to look at the schema, possibly using :mod:`ldap.schema`.
@@ -247,11 +247,11 @@ class BaseCallback(object):
 
         :return: None - any returned value is ignored.
 
-        This callback can happen in all modes, and in all phases, to indicate 
-        that an entry has been either been deleted, or that it no longer 
-        matches your search.  In refresh-only mode, and the refresh phase of 
-        refresh-and-perist mode, the deletion may have taken place at any time 
-        since your last update.  In the persist phase of refresh-and-persist 
+        This callback can happen in all modes, and in all phases, to indicate
+        that an entry has been either been deleted, or that it no longer
+        matches your search.  In refresh-only mode, and the refresh phase of
+        refresh-and-perist mode, the deletion may have taken place at any time
+        since your last update.  In the persist phase of refresh-and-persist
         mode, the entry has just disappeared.
 
         `cursor` provides access to the underlying database, as described in
@@ -281,10 +281,10 @@ class BaseCallback(object):
 
         This callback happens when an entry's DN changes.
 
-        This callback can happen in all modes, and in all phases, to indicate 
-        that an entry's DN has been changed.  In refresh-only mode, and the 
-        refresh phase of refresh-and-perist mode, the change may have taken 
-        place at any time since your last update.  In the persist phase of 
+        This callback can happen in all modes, and in all phases, to indicate
+        that an entry's DN has been changed.  In refresh-only mode, and the
+        refresh phase of refresh-and-perist mode, the change may have taken
+        place at any time since your last update.  In the persist phase of
         refresh-and-persist mode, the entry has just changed.
 
         `cursor` provides access to the underlying database, as described in
@@ -300,7 +300,7 @@ class BaseCallback(object):
 
         You should expect a call to
         :meth:`~syncrepl_client.callbacks.BaseCallback.record_change()` shortly
-        after this callback completes.  
+        after this callback completes.
         """
         pass
 
@@ -337,10 +337,10 @@ class BaseCallback(object):
             `new_attrs` is passed by reference.  If you modify the
             dictionary—or its contents—in any way; you will pay for it later!
 
-        This callback can happen in all modes, and in all phases, to indicate 
-        that an entry has been changed.  In refresh-only mode, and the 
-        refresh phase of refresh-and-perist mode, the change may have taken 
-        place at any time since your last update.  In the persist phase of 
+        This callback can happen in all modes, and in all phases, to indicate
+        that an entry has been changed.  In refresh-only mode, and the
+        refresh phase of refresh-and-perist mode, the change may have taken
+        place at any time since your last update.  In the persist phase of
         refresh-and-persist mode, the entry has just changed.
 
         .. note::
@@ -352,7 +352,7 @@ class BaseCallback(object):
 
             Also, all attribute values will come in as (in Python 2) :obj:`str`
             objects or (in Python 3) :obj:`bytes` objects.
-            
+
             To learn which attributes are single- or multi-valued, and to learn
             the type (or, in LDAP terms, the *syntax*) of an attribute, you
             need to look at the schema, possibly using :mod:`ldap.schema`.
@@ -438,52 +438,52 @@ class LoggingCallback(BaseCallback):
 
     @classmethod
     def bind_complete(cls, ldap, cursor):
-        print('BIND COMPLETE!', file=cls.dest)
+        print("BIND COMPLETE!", file=cls.dest)
         print("\tWE ARE:", ldap.whoami_s(), file=cls.dest)
 
     @classmethod
     def refresh_done(cls, items, cursor):
-        print('REFRESH COMPLETE!', file=cls.dest)
-        print('BEGIN DIRECTORY CONTENTS:', file=cls.dest)
+        print("REFRESH COMPLETE!", file=cls.dest)
+        print("BEGIN DIRECTORY CONTENTS:", file=cls.dest)
         for item in items:
             print(item, file=cls.dest)
             attrs = items[item]
             for attr in attrs.keys():
-                print("\t", attr, sep='', file=cls.dest)
+                print("\t", attr, sep="", file=cls.dest)
                 for value in attrs[attr]:
-                    print("\t\t", value, sep='', file=cls.dest)
-        print('END DIRECTORY CONTENTS', file=cls.dest)
+                    print("\t\t", value, sep="", file=cls.dest)
+        print("END DIRECTORY CONTENTS", file=cls.dest)
 
     @classmethod
     def record_add(cls, dn, attrs, cursor):
-        print('NEW RECORD:', dn, file=cls.dest)
+        print("NEW RECORD:", dn, file=cls.dest)
         for attr in attrs.keys():
-            print("\t", attr, sep='', file=cls.dest)
+            print("\t", attr, sep="", file=cls.dest)
             for value in attrs[attr]:
-                print("\t\t", value, sep='', file=cls.dest)
+                print("\t\t", value, sep="", file=cls.dest)
 
     @classmethod
     def record_delete(cls, dn, cursor):
-        print('DELETED RECORD:', dn, file=cls.dest)
+        print("DELETED RECORD:", dn, file=cls.dest)
 
     @classmethod
     def record_rename(cls, old_dn, new_dn, cursor):
-        print('RENAMED RECORD:', file=cls.dest)
+        print("RENAMED RECORD:", file=cls.dest)
         print("\tOld:", old_dn, file=cls.dest)
         print("\tNew:", new_dn, file=cls.dest)
 
     @classmethod
     def record_change(cls, dn, old_attrs, new_attrs, cursor):
-        print('RECORD CHANGED:', dn, file=cls.dest)
+        print("RECORD CHANGED:", dn, file=cls.dest)
         for attr in new_attrs.keys():
-            print("\t", attr, sep='', file=cls.dest)
+            print("\t", attr, sep="", file=cls.dest)
             for value in new_attrs[attr]:
-                print("\t\t", value, sep='', file=cls.dest)
+                print("\t\t", value, sep="", file=cls.dest)
 
     @classmethod
     def cookie_change(cls, cookie):
-        print('COOKIE CHANGED:', cookie)
+        print("COOKIE CHANGED:", cookie)
 
     @classmethod
     def debug(cls, message):
-        print('[DEBUG]', message, file=cls.dest)
+        print("[DEBUG]", message, file=cls.dest)

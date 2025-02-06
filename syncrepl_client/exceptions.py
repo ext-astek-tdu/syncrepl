@@ -9,7 +9,7 @@
 # This file is made available under the terms of the BSD 3-Clause License,
 # the text of which may be found in the file `LICENSE.md` that was included
 # with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md 
+# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
 #
 # The Python docstrings contained in this file are also made available under the terms
 # of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
@@ -34,20 +34,26 @@ class VersionError(Exception):
 
     * `our_version`: Another tuple.
     """
+
     def __init__(self, which, ours, db):
         self.our_version = ours
         self.their_version = db
         self.component = which
 
     def __str__(self):
-        return (  '%s is version %s, but we are %s'
-                % (self.component, self.their_version, self.our_version))
+        return "%s is version %s, but we are %s" % (
+            self.component,
+            self.their_version,
+            self.our_version,
+        )
 
 
 class VersionJumpError(VersionError):
     def __str__(self):
-        return (  'Can not jump from Python %d to Python %d'
-                % (self.their_version, self.our_version))
+        return "Can not jump from Python %d to Python %d" % (
+            self.their_version,
+            self.our_version,
+        )
 
 
 class ClosedError(Exception):
@@ -58,6 +64,7 @@ class ClosedError(Exception):
 
     If you wish to reconnect to the server, you must use a new instance.
     """
+
     pass
 
 
@@ -67,6 +74,7 @@ class LDAPUrlError(Exception):
     All of the exceptions related to LDAP URLs are subclasses of this
     exception.
     """
+
     pass
 
 
