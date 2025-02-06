@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "syncrepl_client"
+version = "0.1.0"
+description = ""
+authors = ["Thomas Duditlieux <ext_astek_tdu@linagora.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.4"
+mypy = "^1.15.0"
+black = "^25.1.0"
+pre-commit = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
