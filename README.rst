@@ -128,27 +128,6 @@ Lots more details are available in `the Requirements page`_.
 .. _the Requirements page: http://syncrepl-client.readthedocs.io/en/latest/requirements.html
 
 
-Setup Poetry Env
-================
-
-To set up the poetry env copy paste these command in the project repository.::
-   curl -sSL https://install.python-poetry.org | python3 -
-   poetry config virtualenvs.in-project true
-   poetry install
-   poetry shell
-   pre-commit install
-
-You can run tools manually.
-Black (Code Formatting)::
-   black .
-
-Pylint (Linter)::
-   pylint -f colorized ./syncrepl_client 
-
-Mypy (Static Type Checking)::
-   mypy ./syncrepl_client
-
-
 How to Use
 ==========
 
@@ -181,6 +160,32 @@ example.
 .. _unbind: http://syncrepl-client.readthedocs.io/en/latest/client.html#syncrepl_client.Syncrepl.unbind
 .. _syncrepl-client: https://github.com/akkornel/syncrepl/blob/master/syncrepl-client
 .. _setup.py: https://github.com/akkornel/syncrepl/blob/master/setup.py
+
+
+Setting Up the Development Environment Of syncrepl_client
+=========================================================
+
+To set up the poetry env copy paste these command in the project repository::
+
+   curl -sSL https://install.python-poetry.org | python3 -
+   poetry config virtualenvs.in-project true
+   poetry install
+   poetry shell
+   pre-commit install
+
+You can run tools manually.
+Black (Code Formatting)::
+
+   black .
+
+Pylint (Linter)::
+
+   pylint -f colorized ./syncrepl_client 
+
+Mypy (Static Type Checking)::
+   
+   mypy ./syncrepl_client
+
 
 
 Copyright and License
