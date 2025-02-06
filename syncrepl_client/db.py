@@ -21,11 +21,10 @@
 
 import pickle
 import sqlite3
-from sys import version_info
 import uuid
+from sys import version_info
 
 from . import exceptions
-
 
 # We use threading for a lock
 try:

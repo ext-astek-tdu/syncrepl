@@ -19,15 +19,21 @@
 #
 
 
-from enum import Enum
-import ldap
-from ldap.ldapobject import SimpleLDAPObject
-from ldap.syncrepl import SyncreplConsumer
-import ldapurl
 import pickle
 import signal
 import sqlite3
+from enum import Enum
 from sys import argv, exit, version_info
+
+import ldap
+import ldapurl
+from ldap.ldapobject import SimpleLDAPObject
+from ldap.syncrepl import SyncreplConsumer
+
+# Bring in some stuff from this package.
+from . import _version, db, exceptions
+
+__version__ = _version.__version__
 
 try:
     import threading
@@ -40,13 +46,6 @@ if (version_info[0] == 3) and (version_info[1] >= 3):
     from collections.abc import Iterator, Mapping
 else:
     from collections import Iterator, Mapping
-
-# Bring in some stuff from this package.
-from . import db
-from . import exceptions
-from . import _version
-
-__version__ = _version.__version__
 
 
 class SyncreplMode(Enum):
