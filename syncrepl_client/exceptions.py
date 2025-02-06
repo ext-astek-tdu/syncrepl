@@ -49,6 +49,11 @@ class VersionError(Exception):
 
 
 class VersionJumpError(VersionError):
+    """Exception for unsupported Python version jumps.
+
+    This exception is thrown when attempting to jump between Python versions
+    that are not supported.
+    """
     def __str__(self):
         return "Can not jump from Python %d to Python %d" % (
             self.their_version,
@@ -124,20 +129,43 @@ class LDAPUrlParseError(LDAPUrlError):
 
 
 class DBError(Exception):
+    """Generic database-related exception.
+
+    All of the exceptions related to database operations are subclasses of this
+    exception.
+    """
     pass
 
 
 class DBConsistencyWarning(Warning):
+    """Warning for database consistency issues.
+
+    This warning is issued when there are potential consistency issues in the
+    database.
+    """
     pass
 
 
 class DBSchemaError(DBError):
+    """Exception for database schema errors.
+
+    This exception is thrown when there is an issue with the database schema.
+    """
     pass
 
 
 class SchemaVersionError(DBError):
+    """Exception for schema version mismatches.
+
+    This exception is thrown when the schema version of the database does not
+    match the expected version.
+    """
     pass
 
 
 class DBSettingError(DBError):
+    """Exception for invalid database settings.
+
+    This exception is thrown when there is an issue with the database settings.
+    """
     pass

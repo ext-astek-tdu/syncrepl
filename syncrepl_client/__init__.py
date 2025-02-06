@@ -852,10 +852,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         callback.
         """
 
-        # Let's make a class to represent our LDAP items!
-        # We implement the methods needed for a Dictionary.
-        # The keys are DNs; the values are attribute dicts.
         class ItemList(Mapping):
+            """
+            Let's make a class to represent our LDAP items!
+            We implement the methods needed for a Dictionary.
+            The keys are DNs; the values are attribute dicts.
+            """
             # The only thing we need is a database cursor.
             def __init__(self, cursor):
                 # Let the superclass set itself up.
@@ -920,10 +922,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 if self.__syncrepl_count is None:
                     self.__syncrepl_populate()
 
-                # Make a small iterator class.
-                # NOTE: The only reason we just need a local index, is because
-                # this object is read-only.
                 class ItemIter(Iterator):
+                    """
+                    Make a small iterator class.
+                    NOTE: The only reason we just need a local index, is because
+                    this object is read-only.
+                    """
                     def __init__(iterself, item_list):
                         iterself.i = 0
                         iterself.item_list = item_list
