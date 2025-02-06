@@ -37,6 +37,5 @@ exclude = ["tests/", "doc/", "setup.py"]
 [tool.pylint.MASTER]
 ignore-paths = ["tests/", "doc/", "setup.py"]
 
-[tool.pylint]
-exclude-too-few-public-methods = true
-good-names = ["dn", "mb", "cu", "el"]
+[tool.pylint.message_control]
+disable = ["R0903"]
