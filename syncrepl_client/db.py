@@ -244,7 +244,7 @@ class DBInterface(object):
 
         # Let's see what tables we have.
         # We search for all table names that we've ever used.
-        discovered_tables = list()
+        discovered_tables = []
         c = self.__db.execute(
             """
             SELECT name
