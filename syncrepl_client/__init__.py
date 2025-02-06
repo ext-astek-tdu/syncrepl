@@ -1003,7 +1003,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 raise exceptions.DBConsistencyWarning(
                     f"Attempted to delete UUID {uuid} from the database, but it does not exist!"
                 )
-                return
 
             # Go ahead and delete (but don't commit yet!)
             c.execute(
