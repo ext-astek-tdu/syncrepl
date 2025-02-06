@@ -407,8 +407,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if (ldap_url is not None) and (type(ldap_url) is not ldapurl.LDAPUrl):
             try:
                 ldap_url = ldapurl.LDAPUrl(ldap_url)
-            except:
-                raise exceptions.LDAPURLParseError(ldap_url)
+            except Exception as err:
+                raise exceptions.LDAPURLParseError(ldap_url) from err
 
         # Grab the DB-stored URL.  If found, parse.
         db_url = self.__db.get_setting("syncrepl_url")
@@ -697,12 +697,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
 
         # Cancelled exceptions _should_ be OK, as long as `please_stop()` has
         # previously been called.
-        except ldap.CANCELLED:
+        except ldap.CANCELLED as err:
             self.__please_stop_lock.acquire()
             please_stop_value = self.__please_stop
             self.__please_stop_lock.release()
             if please_stop_value is False:
-                raise ldap.CANCELLED
+                raise ldap.CANCELLED from err
             return False
 
         # All other exceptions are real, and aren't caught.
