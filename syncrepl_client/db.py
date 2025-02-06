@@ -1,23 +1,20 @@
-#!/bin/env python
-# -*- coding: utf-8 -*-
-# vim: ts=4 sw=4 et
+"""
+syncrepl_client database code.
 
-# syncrepl_client database code.
-#
-# Refer to the AUTHORS file for copyright statements.
-#
-# This file is made available under the terms of the BSD 3-Clause License,
-# the text of which may be found in the file `LICENSE.md` that was included
-# with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
-#
-# The Python docstrings contained in this file are also made available under the terms
-# of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
-# the text of which may be found in the file `LICENSE_others.md` that was included
-# with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
-#
+Refer to the AUTHORS file for copyright statements.
 
+This file is made available under the terms of the BSD 3-Clause License,
+the text of which may be found in the file `LICENSE.md` that was included
+with this distribution, and also at
+https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
+
+The Python docstrings contained in this file are also made available under the terms
+of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
+the text of which may be found in the file `LICENSE_others.md` that was included
+with this distribution, and also at
+https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
+
+"""
 
 import pickle
 import sqlite3
@@ -426,9 +423,7 @@ class DBInterface(object):
             the appropriate time.
         """
         if not isinstance(setting, str):
-            raise exceptions.DBSettingError(
-                "Setting name is not a string."
-            )
+            raise exceptions.DBSettingError("Setting name is not a string.")
         if version_info[0] >= 3 and not isinstance(value, bytes):
             raise exceptions.DBSettingError(
                 f'Value for setting "{setting}" is not a bytes.'
