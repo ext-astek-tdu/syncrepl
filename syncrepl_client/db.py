@@ -264,7 +264,7 @@ class DBInterface(object):
         # Go ahead and upgrade to the current version.
         if len(discovered_tables) == 0:
             c.close()
-            return self._upgrade_schema(self.__db, 0)
+            self._upgrade_schema(self.__db, 0)
 
         # Grab the list of tables, and make sure our version-number-containing
         # table is present.
@@ -314,7 +314,7 @@ class DBInterface(object):
         # schema version to the current schema version.  This also tells us
         # that, since we're done making changes, it's a good time to commit!
         if old_version == CURRENT_SCHEMA_VERSION:
-            return None
+            return
 
         # Start by upgrading us from version 0 to version 1.
         if old_version == 0:
@@ -347,7 +347,7 @@ class DBInterface(object):
 
             # Hand us off to upgrade us from version 1 to whatever we're at now.
             db.commit()
-            return cls._upgrade_schema(db, 1)
+            cls._upgrade_schema(db, 1)
 
         # The next upgrade would be here.
 

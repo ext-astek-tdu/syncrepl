@@ -560,8 +560,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
     def __del__(self):
         # Last-resort attempt to make sure things are cleaned up.
         # NOTE: If there was a problem in initialization, unbind will catch it.
-        if self.deleted is not True:
-            return self.unbind()
+        if not self.deleted:
+            self.unbind()
 
     def db(self):
         """Return a sqlite3 database instance for client use.
