@@ -391,7 +391,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         if db_version_compare == 1:
             raise exceptions.VersionError(
                 which="syncrepl_client",
-                ours=_version.__version_tuple_,
+                ours=_version.__version_tuple__,
                 db=db_version,
             )
         if db_version_compare == -1:
