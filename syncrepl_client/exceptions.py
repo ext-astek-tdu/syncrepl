@@ -70,7 +70,6 @@ class ClosedError(Exception):
     If you wish to reconnect to the server, you must use a new instance.
     """
 
-    pass
 
 
 class LDAPUrlError(Exception):
@@ -80,7 +79,6 @@ class LDAPUrlError(Exception):
     exception.
     """
 
-    pass
 
 
 class LDAPUrlConflict(LDAPUrlError):
@@ -134,7 +132,6 @@ class DBError(Exception):
     All of the exceptions related to database operations are subclasses of this
     exception.
     """
-    pass
 
 
 class DBConsistencyWarning(Warning):
@@ -143,7 +140,6 @@ class DBConsistencyWarning(Warning):
     This warning is issued when there are potential consistency issues in the
     database.
     """
-    pass
 
 
 class DBSchemaError(DBError):
@@ -151,7 +147,6 @@ class DBSchemaError(DBError):
 
     This exception is thrown when there is an issue with the database schema.
     """
-    pass
 
 
 class SchemaVersionError(DBError):
@@ -160,7 +155,6 @@ class SchemaVersionError(DBError):
     This exception is thrown when the schema version of the database does not
     match the expected version.
     """
-    pass
 
 
 class DBSettingError(DBError):
@@ -168,4 +162,3 @@ class DBSettingError(DBError):
 
     This exception is thrown when there is an issue with the database settings.
     """
-    pass

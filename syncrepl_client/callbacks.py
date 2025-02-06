@@ -117,7 +117,6 @@ class BaseCallback(object):
             Do not commit the in-progress transaction!  The commit will take
             place automatically, once your callback returns.
         """
-        pass
 
     @classmethod
     def refresh_done(cls, items, cursor):
@@ -179,7 +178,6 @@ class BaseCallback(object):
         :obj:`False`.  It is then safe to call
         :meth:`~syncrepl_client.Syncrepl.unbind`.
         """
-        pass
 
     @classmethod
     def record_add(cls, dn, attrs, cursor):
@@ -235,7 +233,6 @@ class BaseCallback(object):
             Do not commit the in-progress transaction!  The commit will take
             place automatically, once your callback returns.
         """
-        pass
 
     @classmethod
     def record_delete(cls, dn, cursor):
@@ -265,7 +262,6 @@ class BaseCallback(object):
             Do not commit the in-progress transaction!  The commit will take
             place automatically, once your callback returns.
         """
-        pass
 
     @classmethod
     def record_rename(cls, old_dn, new_dn, cursor):
@@ -302,7 +298,6 @@ class BaseCallback(object):
         :meth:`~syncrepl_client.callbacks.BaseCallback.record_change()` shortly
         after this callback completes.
         """
-        pass
 
     @classmethod
     def record_change(cls, dn, old_attrs, new_attrs, cursor):
@@ -368,7 +363,6 @@ class BaseCallback(object):
             Do not commit the in-progress transaction!  The commit will take
             place automatically, once your callback returns.
         """
-        pass
 
     @classmethod
     def cookie_change(cls, cookie):
@@ -391,7 +385,6 @@ class BaseCallback(object):
         up to the LDAP server to give us a new Syncrepl cookie, when it is
         appropriate to do so.
         """
-        pass
 
     @classmethod
     def debug(cls, message):
@@ -408,7 +401,6 @@ class BaseCallback(object):
         The safest thing to do is to just `pass` this method.  Or, subclass
         :class:`~syncrepl_client.callbacks.BaseCallback`.
         """
-        pass
 
 
 class LoggingCallback(BaseCallback):
