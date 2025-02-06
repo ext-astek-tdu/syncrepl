@@ -388,7 +388,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 ours=tuple(version_info),
                 db=db_pyversion,
             )
-        elif db_pyversion_compare == -1:
+        if db_pyversion_compare == -1:
             self.__db.set_setting(
                 "syncrepl_pyversion", pickle.dumps(tuple(version_info))
             )
@@ -398,7 +398,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 ours=_version.__version_tuple_,
                 db=db_version,
             )
-        elif db_version_compare == -1:
+        if db_version_compare == -1:
             self.__db.set_setting(
                 "syncrepl_version", pickle.dumps(_version.__version_tuple__)
             )
@@ -703,8 +703,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             self.__please_stop_lock.release()
             if please_stop_value is False:
                 raise ldap.CANCELLED
-            else:
-                return False
+            return False
 
         # All other exceptions are real, and aren't caught.
 

@@ -325,7 +325,7 @@ class DBInterface(object):
 
         # Now we can validate the schema against the stated version.
 
-        elif version == 1:
+        if version == 1:
             pass
 
     @classmethod
