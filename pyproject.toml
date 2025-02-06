@@ -32,7 +32,10 @@ all = true
 
 [tool.mypy]
 ignore_missing_imports = true
-exclude = ["tests/", "doc/"]
+exclude = ["tests/", "doc/", "setup.py"]
+
+[tool.pylint.MASTER]
+ignore-paths = ["tests/", "doc/", "setup.py"]
 
 [tool.pylint]
 exclude-too-few-public-methods = true
