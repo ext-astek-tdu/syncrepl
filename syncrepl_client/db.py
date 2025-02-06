@@ -18,16 +18,9 @@ https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
 
 import pickle
 import sqlite3
-import uuid
 from sys import version_info
 
 from . import exceptions
-
-# We use threading for a lock
-try:
-    import threading
-except ImportError:
-    import dummy_threading as threading
 
 
 # Define a custom column column type for our attribute lists, which
