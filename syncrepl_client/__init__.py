@@ -367,7 +367,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 # Check for difference, fall through to next if the same.
                 if a[i] < b[i]:
                     return -1
-                elif a[i] > b[i]:
+                if a[i] > b[i]:
                     return 1
             return 0
 
@@ -812,8 +812,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         possible_cookie = self.__db.get_setting("syncrepl_cookie")
         if possible_cookie is None:
             return None
-        else:
-            return pickle.loads(possible_cookie)
+        return pickle.loads(possible_cookie)
 
     def syncrepl_set_cookie(self, cookie):
         """Store Syncrepl cookie in data store.
@@ -914,8 +913,8 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 if row is not None:
                     self.__syncrepl_attrlist[dn] = row[0]
                     return row[0]
-                else:
-                    raise KeyError(dn)
+                
+                raise KeyError(dn)
 
             def __iter__(self):
                 # Populate the DNs first.

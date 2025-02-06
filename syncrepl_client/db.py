@@ -205,8 +205,7 @@ class DBInterface(object):
         """
         if params is not None:
             return self.__db.execute(statement, params)
-        else:
-            return self.__db.execute(statement)
+        return self.__db.execute(statement)
 
     def commit(self):
         """Commit the current transaction."""
@@ -338,7 +337,7 @@ class DBInterface(object):
             return None
 
         # Start by upgrading us from version 0 to version 1.
-        elif old_version == 0:
+        if old_version == 0:
             db.executescript(
                 """
                 PRAGMA journal_mode = WAL;
@@ -373,7 +372,7 @@ class DBInterface(object):
         # The next upgrade would be here.
 
         # Finally, catch cases where the schema is too new.
-        elif old_version > CURRENT_SCHEMA_VERSION:
+        if old_version > CURRENT_SCHEMA_VERSION:
             raise exceptions.SchemaVersionError("Schema too new")
 
     def get_setting(self, setting):
@@ -399,8 +398,7 @@ class DBInterface(object):
         r = c.fetchone()
         if r is None:
             return None
-        else:
-            return r[0]
+        return r[0]
 
     def set_setting(self, setting, value):
         """Store a setting into the syncrepl_settings table.
