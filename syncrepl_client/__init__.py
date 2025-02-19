@@ -21,19 +21,18 @@ import threading
 
 import ldap
 import ldap.sasl
-import ldapurl
 from ldap.ldapobject import SimpleLDAPObject
 from ldap.syncrepl import SyncreplConsumer
 
 from syncrepl_client.callbacks import BaseCallback
 from syncrepl_client.iter_ldap import ItemList
-from syncrepl_client.syncrepl_mode import SyncreplMode
+from syncrepl_client.ldap_info import LDAPInfo
 
 from . import _version, db, exceptions
 
 __version__ = _version.__version__
 
-# Make a small function to compare version tuples.
+
 def compare_versions(a, b):
     """Compare two version tuples.
 
@@ -157,7 +156,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
     """
 
     def __init__(
-        self, data_path, callback, mode, ldap_url=None, starttls=False, **kwargs
+        self,
+        data_path,
+        callback,
+        ldap_info: LDAPInfo,
+        starttls=False,
+        **kwargs,
     ):
         """Instantiate, connect to an LDAP server, and bind.
 
@@ -245,15 +249,25 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         request safe teardown of the connection, call
         :meth:`~syncrepl_client.Syncrepl.please_stop`.
         """
-        self._init_member_variable(callback, mode, data_path)
+
+        self._init_member_variable(
+            ldap_info,
+            callback,
+            data_path,
+        )
         self._check_python_version()
         self._check_syncrepl_version()
-        new_ldap_url = self._create_ldap_url(ldap_url)
-        self._init_ldap_client(starttls, new_ldap_url, mode, **kwargs)
+        self._init_ldap_client(starttls, **kwargs)
 
-    def _init_member_variable(self, callback, mode, data_path):
+    def _init_member_variable(
+        self,
+        ldap_info: LDAPInfo,
+        callback,
+        data_path,
+    ):
         assert issubclass(callback, BaseCallback)
-        assert isinstance(mode, SyncreplMode)
+
+        self.ldap_info = ldap_info
 
         self.__ldap_setup_complete = False
         self.__in_refresh = True
@@ -347,68 +361,18 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 "syncrepl_version", pickle.dumps(_version.__version_tuple__)
             )
 
-    def _create_ldap_url(self, ldap_url) -> ldapurl.LDAPUrl:
-        # If ldap_url exists, and isn't an object, then convert it
-        if (ldap_url is not None) and not isinstance(ldap_url, ldapurl.LDAPUrl):
-            try:
-                ldap_url = ldapurl.LDAPUrl(ldap_url) #TODO: Here set the scope
-            except Exception as err:
-                raise exceptions.LDAPURLParseError(ldap_url) from err
-
-        # Grab the DB-stored URL.  If found, parse.
-        db_url = self.__db.get_setting("syncrepl_url")
-        if db_url is not None:
-            db_url = ldapurl.LDAPUrl(pickle.loads(db_url))
-
-        # If we don't have a URL in the database, then store what we were given.
-        # If we don't have any URL at all, then throw.
-        if db_url is None:
-            if ldap_url is None:
-                raise exceptions.LDAPUrlError
-            self.__db.set_setting("syncrepl_url", pickle.dumps(str(ldap_url)))
-
-        # Check if someone's trying to change the existing LDAP URL.
-        if db_url is not None and ldap_url != db_url:
-            # Temporary names, for clarity.
-            current_url = db_url
-            new_url = ldap_url
-
-            # If the stored URL doesn't match the passed URL,
-            # _and_ one of our invariant attributes is different, fail.
-            if (
-                (current_url.dn != new_url.dn)
-                or (current_url.attrs != new_url.attrs)
-                or (current_url.scope != new_url.scope)
-                or (current_url.filterstr != new_url.filterstr)
-            ):
-                raise exceptions.LDAPUrlConflict(current_url, new_url)
-
-            # We allow changes to other attributes (like host, who, and cred)
-            # even though they may cause weird search result changes (for
-            # example, due to differing ACLs between accounts).
-
-            # Since we haven't thrown, allow the new URL.
-            self.__db.set_setting("syncrepl_url", pickle.dumps(str(new_url)))
-
-        return ldap_url
-
-    def _init_ldap_client(self, starttls, ldap_url, mode, **kwargs):
+    def _init_ldap_client(self, starttls, **kwargs):
         # Finally, we can set up our LDAP client!
+        ldap_url = self.ldap_info.get_ldap_url()
         SimpleLDAPObject.__init__(self, ldap_url.initializeUrl(), **kwargs)
 
         # If we should do STARTTLS, then do it now.
         if starttls is True:
             self.start_tls_s()
 
-        # Bind to the server (this also triggers connection setup)
-        if ldap_url.who is None:
-            self.simple_bind_s()
-        elif ldap_url.who == "GSSAPI":
-
-            sasl_bind = ldap.sasl.gssapi()
-            self.sasl_interactive_bind_s("", sasl_bind)
-        else:
-            self.simple_bind_s(who=ldap_url.who, cred=ldap_url.cred)
+        self.simple_bind_s(
+            who=self.ldap_info.bind_dn, cred=self.ldap_info.password
+        )
 
         # Commit any settings changes, then do an optimize.
         self.__db.commit()
@@ -418,19 +382,12 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         self.callback.bind_complete(self, self.__db.cursor())
         self.__ldap_setup_complete = True
 
-        # Before we start, we have to check if a filter was set.  If not, set the
-        # default that the LDAP module uses.
-        if ldap_url.filterstr is None:
-            ldap_url.filterstr = "(objectClass=*)"
-        if ldap_url.scope is None:
-            ldap_url.scope = ldapurl.LDAP_SCOPE_SUBTREE
-
         # Prepare the search
         self.ldap_object_search = self.syncrepl_search(
-            ldap_url.dn,
-            ldap_url.scope,
-            mode=mode.value,
-            filterstr=ldap_url.filterstr,
+            self.ldap_info.dn,
+            self.ldap_info.scope,
+            mode=self.ldap_info.mode.value,
+            filterstr=self.ldap_info.search_filter,
             attrlist=ldap_url.attrs,
         )
 

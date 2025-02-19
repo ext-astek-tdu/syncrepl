@@ -14,3 +14,4 @@ syncrepl_client/*.pyc
 build
 dist
 syncrepl_client.egg-info
+/prefix/*
