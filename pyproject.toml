@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "syncrepl_client"
+version = "0.1.0"
+description = ""
+authors = ["Thomas Duditlieux <ext_astek_tdu@linagora.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+mypy = "^1.15.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pylint = "^3.3.4"
+mypy = "^1.15.0"
+black = "^25.1.0"
+pre-commit = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 80
+
+[tool.isort]
+profile = "black"
+py_version = 39
+line_length = 80
+
+[tool.pycln]
+all = true
+
+[tool.mypy]
+ignore_missing_imports = true
+exclude = ["tests/", "doc/", "setup.py"]
+
+[tool.pylint.MASTER]
+ignore-paths = ["tests/", "doc/", "setup.py"]
+
+[tool.pylint.message_control]
+disable = ["R0903"]

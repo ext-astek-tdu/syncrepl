@@ -1,23 +1,19 @@
-#!/bin/env python
-# -*- coding: utf-8 -*-
-# vim: ts=4 sw=4 et
+"""
+syncrepl_client exceptions code.
 
-# syncrepl_client exceptions code.
-#
-# Refer to the AUTHORS file for copyright statements.
-#
-# This file is made available under the terms of the BSD 3-Clause License,
-# the text of which may be found in the file `LICENSE.md` that was included
-# with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE.md 
-#
-# The Python docstrings contained in this file are also made available under the terms
-# of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
-# the text of which may be found in the file `LICENSE_others.md` that was included
-# with this distribution, and also at
-# https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
-#
+Refer to the AUTHORS file for copyright statements.
 
+This file is made available under the terms of the BSD 3-Clause License,
+the text of which may be found in the file `LICENSE.md` that was included
+with this distribution, and also at
+https://github.com/akkornel/syncrepl/blob/master/LICENSE.md
+
+The Python docstrings contained in this file are also made available under the terms
+of the Creative Commons Attribution-ShareAlike 4.0 International Public License,
+the text of which may be found in the file `LICENSE_others.md` that was included
+with this distribution, and also at
+https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
+"""
 
 class VersionError(Exception):
     """Database is too new.
@@ -34,20 +30,24 @@ class VersionError(Exception):
 
     * `our_version`: Another tuple.
     """
+
     def __init__(self, which, ours, db):
         self.our_version = ours
         self.their_version = db
         self.component = which
 
     def __str__(self):
-        return (  '%s is version %s, but we are %s'
-                % (self.component, self.their_version, self.our_version))
+        return f"{self.component} is version {self.their_version}, but we are {self.our_version}"
 
 
 class VersionJumpError(VersionError):
+    """Exception for unsupported Python version jumps.
+
+    This exception is thrown when attempting to jump between Python versions
+    that are not supported.
+    """
     def __str__(self):
-        return (  'Can not jump from Python %d to Python %d'
-                % (self.their_version, self.our_version))
+        return f"Can not jump from Python {self.their_version} to Python {self.our_version}"
 
 
 class ClosedError(Exception):
@@ -58,7 +58,7 @@ class ClosedError(Exception):
 
     If you wish to reconnect to the server, you must use a new instance.
     """
-    pass
+
 
 
 class LDAPUrlError(Exception):
@@ -67,7 +67,7 @@ class LDAPUrlError(Exception):
     All of the exceptions related to LDAP URLs are subclasses of this
     exception.
     """
-    pass
+
 
 
 class LDAPUrlConflict(LDAPUrlError):
@@ -116,20 +116,38 @@ class LDAPUrlParseError(LDAPUrlError):
 
 
 class DBError(Exception):
-    pass
+    """Generic database-related exception.
+
+    All of the exceptions related to database operations are subclasses of this
+    exception.
+    """
 
 
 class DBConsistencyWarning(Warning):
-    pass
+    """Warning for database consistency issues.
+
+    This warning is issued when there are potential consistency issues in the
+    database.
+    """
 
 
 class DBSchemaError(DBError):
-    pass
+    """Exception for database schema errors.
+
+    This exception is thrown when there is an issue with the database schema.
+    """
 
 
 class SchemaVersionError(DBError):
-    pass
+    """Exception for schema version mismatches.
+
+    This exception is thrown when the schema version of the database does not
+    match the expected version.
+    """
 
 
 class DBSettingError(DBError):
-    pass
+    """Exception for invalid database settings.
+
+    This exception is thrown when there is an issue with the database settings.
+    """
