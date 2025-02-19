@@ -16,11 +16,8 @@ https://github.com/akkornel/syncrepl/blob/master/LICENSE_others.md
 """
 
 import pickle
-import sqlite3
-from enum import Enum
 from sys import version_info
 import threading
-from collections.abc import Iterator, Mapping
 
 import ldap
 import ldap.sasl
@@ -29,46 +26,34 @@ from ldap.ldapobject import SimpleLDAPObject
 from ldap.syncrepl import SyncreplConsumer
 
 from syncrepl_client.callbacks import BaseCallback
+from syncrepl_client.iter_ldap import ItemList
+from syncrepl_client.syncrepl_mode import SyncreplMode
 
 from . import _version, db, exceptions
 
 __version__ = _version.__version__
 
+# Make a small function to compare version tuples.
+def compare_versions(a, b):
+    """Compare two version tuples.
 
-class SyncreplMode(Enum):
-    """
-    This enumeration is used to specify the operating mode for the Syncrepl
-    client.  Once a mode is set it can not be changed.  To change the mode, you
-    will have to (safely) shut down your existing search, unbind and destroy
-    the existing instance, and start a new instance in the new mode.
-    """
+    :param tuple a: The left side.
 
-    REFRESH_ONLY = "refreshOnly"
-    """
-    In this mode, the syncrepl search will last long enough to bring you in
-    sync with the server.  Once you are in sync,
-    :meth:`~syncrepl_client.Syncrepl.poll()` will return :obj:`False`.
-    """
+    :param tuple b: The right side.
 
-    REFRESH_AND_PERSIST = "refreshAndPersist"
-    """
-    In this mode, you start out doing a refresh.  Once the refresh is complete,
-    subsequent calls to :meth:`~syncrepl_client.Syncrepl.poll` will be used to
-    receive changes as they happen on the LDAP server.  All calls to
-    :meth:`~syncrepl_client.Syncrepl.poll()` will return :obj:`True`, unless a
-    timeout takes place (that will throw :class:`ldap.TIMEOUT`), you cancel the
-    search (that will throw :class:`ldap.CANCELLED`), or something else goes
-    wrong.
+    :returns: -1 if a<b, zero if a==b, or 1 if a>b.
 
     .. note::
-        When running a Syncrepl search in refresh-and-persist mode, it is
-        **strongly** recommended that you run the actual search operation in a
-        thread, so that you can catch signals which would otherwise cause an
-        unclean termination of the Syncrepl search.
-
-        For more information, see the :meth:`~syncrepl_client.Syncrepl.run`
-        method, which is what you should use as the thread's target.
+        Only the first three components are compared.
     """
+    # A simple loop over each component
+    for i in (0, 1, 2):
+        # Check for difference, fall through to next if the same.
+        if a[i] < b[i]:
+            return -1
+        if a[i] > b[i]:
+            return 1
+    return 0
 
 
 class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
@@ -177,17 +162,11 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         """Instantiate, connect to an LDAP server, and bind.
 
         :param str data_path: A path to the database file.
-
         :param object callback: An object that receives callbacks.
-
         :param mode: The syncrepl search mode to use.
-
         :type mode: A member of the :class:`~syncrepl_client.SyncreplMode` enumeration.
-
         :param ldap_url: A complete LDAP URL string, or an LDAPUrl instance, or :obj:`None`.
-
         :type ldap_url: str or ldapurl.LDAPUrl or None
-
         :param bool starttls: Weather STARTTLS should be used before binding.
 
         :returns: A Syncrepl instance.
@@ -266,29 +245,29 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         request safe teardown of the connection, call
         :meth:`~syncrepl_client.Syncrepl.please_stop`.
         """
+        self._init_member_variable(callback, mode, data_path)
+        self._check_python_version()
+        self._check_syncrepl_version()
+        new_ldap_url = self._create_ldap_url(ldap_url)
+        self._init_ldap_client(starttls, new_ldap_url, mode, **kwargs)
 
-        # Set some instanace veriables.
+    def _init_member_variable(self, callback, mode, data_path):
+        assert issubclass(callback, BaseCallback)
+        assert isinstance(mode, SyncreplMode)
+
         self.__ldap_setup_complete = False
         self.__in_refresh = True
         self.__present_uuids = []
         self.deleted = False
 
-        # Set up please_stop with a lock
         self.__please_stop = False
         self.__please_stop_lock = threading.Lock()
 
-        assert issubclass(callback, BaseCallback)
         self.callback = callback
 
-        # Check that we have a valid mode
-        assert isinstance(mode, SyncreplMode)
-
-        # Connect to (and, if necessary, initialize) our database.
-        # We pre-set each variable, so we know what's been done if we have to
-        # clean up after an exception.
-        self.__db = None
         self.__db = db.DBInterface(data_path)
 
+    def _check_python_version(self):
         # Before accessing data, check our Python major version.
         major_c = self.__db.execute(
             """
@@ -321,6 +300,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 which="python", ours=version_info[0], db=major_v[0][0]
             )
 
+    def _check_syncrepl_version(self):
         # At this point, our major Python versions are the same!
         # We can now move on to the more-specific version checks.
 
@@ -334,28 +314,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             self.__db.set_setting(
                 "syncrepl_pyversion", pickle.dumps(tuple(version_info))
             )
-
-        # Make a small function to compare version tuples.
-        def compare_versions(a, b):
-            """Compare two version tuples.
-
-            :param tuple a: The left side.
-
-            :param tuple b: The right side.
-
-            :returns: -1 if a<b, zero if a==b, or 1 if a>b.
-
-            .. note::
-                Only the first three components are compared.
-            """
-            # A simple loop over each component
-            for i in (0, 1, 2):
-                # Check for difference, fall through to next if the same.
-                if a[i] < b[i]:
-                    return -1
-                if a[i] > b[i]:
-                    return 1
-            return 0
 
         # Check our specifc versions, and throw if we're too new.
         # Otherwise, upgrade!
@@ -389,10 +347,11 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 "syncrepl_version", pickle.dumps(_version.__version_tuple__)
             )
 
+    def _create_ldap_url(self, ldap_url) -> ldapurl.LDAPUrl:
         # If ldap_url exists, and isn't an object, then convert it
         if (ldap_url is not None) and not isinstance(ldap_url, ldapurl.LDAPUrl):
             try:
-                ldap_url = ldapurl.LDAPUrl(ldap_url)
+                ldap_url = ldapurl.LDAPUrl(ldap_url) #TODO: Here set the scope
             except Exception as err:
                 raise exceptions.LDAPURLParseError(ldap_url) from err
 
@@ -431,6 +390,9 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
             # Since we haven't thrown, allow the new URL.
             self.__db.set_setting("syncrepl_url", pickle.dumps(str(new_url)))
 
+        return ldap_url
+
+    def _init_ldap_client(self, starttls, ldap_url, mode, **kwargs):
         # Finally, we can set up our LDAP client!
         SimpleLDAPObject.__init__(self, ldap_url.initializeUrl(), **kwargs)
 
@@ -831,106 +793,6 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
         Triggers a :meth:`~syncrepl_client.callbacks.BaseCallback.refresh_done`
         callback.
         """
-
-        class ItemList(Mapping):
-            """
-            Let's make a class to represent our LDAP items!
-            We implement the methods needed for a Dictionary.
-            The keys are DNs; the values are attribute dicts.
-            """
-
-            # The only thing we need is a database cursor.
-            def __init__(self, cursor):
-                # Let the superclass set itself up.
-                Mapping.__init__(self)
-
-                # Store our cursor
-                self.__syncrepl_cursor = cursor
-
-                # Define attributes for our list of DNs, and the number of DNs.
-                # These are lazily-populated by checking __syncrepl_count.
-                self.__syncrepl_count = None
-                self.__syncrepl_list = None
-
-                # We also make a place to cache entries we've pulled.
-                self.__syncrepl_attrlist = {}
-
-            def __del__(self):
-                try:
-                    self.__syncrepl_cursor.close()
-                except sqlite3.ProgrammingError:
-                    pass
-
-            def __syncrepl_populate(self):
-                rowlist = []
-                self.__syncrepl_cursor.execute(
-                    """
-                    SELECT dn
-                      FROM syncrepl_records
-                """
-                )
-                for row in self.__syncrepl_cursor.fetchall():
-                    rowlist.append(row[0])
-                self.__syncrepl_list = rowlist
-                self.__syncrepl_count = len(rowlist)
-
-            def __getitem__(self, dn):
-                # Populate, and check cache.
-                if self.__syncrepl_count is None:
-                    self.__syncrepl_populate()
-                elif dn in self.__syncrepl_attrlist:
-                    return self.__syncrepl_attrlist[dn]
-
-                # Check for the DN in the DB.
-                # Cache the result for later use.
-                self.__syncrepl_cursor.execute(
-                    """
-                    SELECT attributes
-                      FROM syncrepl_records
-                     WHERE dn = ?
-                """,
-                    (dn,),
-                )
-                row = self.__syncrepl_cursor.fetchone()
-                if row is not None:
-                    self.__syncrepl_attrlist[dn] = row[0]
-                    return row[0]
-
-                raise KeyError(dn)
-
-            def __iter__(self):
-                # Populate the DNs first.
-                if self.__syncrepl_count is None:
-                    self.__syncrepl_populate()
-
-                class ItemIter(Iterator):
-                    """
-                    Make a small iterator class.
-                    NOTE: The only reason we just need a local index, is because
-                    this object is read-only.
-                    """
-
-                    def __init__(self, item_list):
-                        self.i = 0
-                        self.item_list = item_list
-
-                    def __next__(self):
-                        # Remember, i is zero-indexed
-                        if self.i >= len(self.item_list):
-                            raise StopIteration
-                        dn = self.item_list[self.i]
-                        self.i += 1
-                        return dn
-
-                # Give the iterator to the client, along with a list ref.
-                return ItemIter(self.__syncrepl_list)
-
-            def __len__(self):
-                # Populate, and then return length.
-                if self.__syncrepl_count is None:
-                    self.__syncrepl_populate()
-                return self.__syncrepl_count
-
         # Get a cursor, then do the callback to the client.
         c = self.__db.cursor()
         self.callback.refresh_done(ItemList(c), c)
