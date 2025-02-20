@@ -172,6 +172,7 @@ To set up the poetry env copy paste these command in the project repository::
    poetry install
    poetry shell
    pre-commit install
+   git add .pre-commit-config.yaml
 
 You can run tools manually.
 Black (Code Formatting)::
