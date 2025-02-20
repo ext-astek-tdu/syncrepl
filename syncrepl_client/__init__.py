@@ -1113,7 +1113,7 @@ class Syncrepl(SyncreplConsumer, SimpleLDAPObject):
                 # We have an old record in the way.  Act like we got an "item
                 # deleted" message from the LDAP server.
                 old_uuid = possible_db_record[0]
-                syncrepl_delete(old_uuid)
+                self.syncrepl_delete(old_uuid)
 
             # Now we can insert the record and do the add callback.
             # NOTE: We have to pickle the attributes ourselves.

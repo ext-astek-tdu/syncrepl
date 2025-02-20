@@ -36,9 +36,9 @@ from syncrepl_client.ldap_info import LDAPInfo
 from syncrepl_client.syncrepl_mode import SyncreplMode
 
 
-DN = "dc=openldaptest,dc=com"
-BIND_DN = "cn=replicator,dc=openldaptest,dc=com"
-CREDENTIAL = "replicator"
+DN = "dc=openldapprov,dc=com"
+BIND_DN = "cn=admin,dc=openldapprov,dc=com"
+CREDENTIAL = "admin"
 SEARCH_FILTER = "(objectClass=*)"
 HOST_PORT = "localhost:389"
 SCOPE = ldap.SCOPE_SUBTREE
