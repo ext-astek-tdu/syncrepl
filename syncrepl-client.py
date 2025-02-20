@@ -24,67 +24,38 @@ from __future__ import print_function
 
 from argparse import ArgumentParser
 import signal
-from syncrepl_client import Syncrepl, SyncreplMode
+import sys
+
+import ldap
+from syncrepl_client import Syncrepl
 from syncrepl_client.callbacks import LoggingCallback
 from syncrepl_client._version import __version__
 from sys import argv, exit
 
+from syncrepl_client.ldap_info import LDAPInfo
+from syncrepl_client.syncrepl_mode import SyncreplMode
 
-# Set up arguments, and parse
 
-argp = ArgumentParser(
-    description="A demonstration LDAP Syncrepl client.",
-    epilog="""
-For Syncrepl Client documentation, go to\n
-http://syncrepl-client.readthedocs.io/en/latest/
-""",
-)
+DN = "dc=openldapprov,dc=com"
+BIND_DN = "cn=admin,dc=openldapprov,dc=com"
+CREDENTIAL = "admin"
+SEARCH_FILTER = "(objectClass=*)"
+HOST_PORT = "localhost:389"
+SCOPE = ldap.SCOPE_SUBTREE
+MODE = SyncreplMode.REFRESH_ONLY
 
-argp.add_argument(
-    "-V",
-    "--version",
-    action="version",
-    version="syncrepl_client version " + __version__,
-    help="Print the installed version of syncrepl_client.",
-)
-argp.add_argument(
-    "--persist",
-    action="store_true",
-    required=False,
-    help="Keep the connection open after refresh, to receive real-time changes.",
-)
-argp.add_argument(
-    "--trace",
-    action="store_true",
-    required=False,
-    help="Turn on trace messages from the underlying Python LDAP library, and OpenLDAP.",
-)
-argp.add_argument(
-    "--nodir",
-    action="store_true",
-    required=False,
-    help="Skip the directory dump when the refresh phase completes.",
-)
-argp.add_argument(
-    "--starttls",
-    action="store_true",
-    required=False,
-    help="Use STARTTLS after connection, but before binding (use with ldap schema only).",
-)
-argp.add_argument(
-    "url",
-    type=str,
-    help="An LDAP URL with all information required to do work.",
-)
-argp.add_argument(
-    "prefix", type=str, help="A path and filename prefix, to store data files."
+LDAP_INFO = LDAPInfo(
+    DN, BIND_DN, CREDENTIAL, SEARCH_FILTER, HOST_PORT, SCOPE, MODE
 )
 
-args = argp.parse_args()
+DATA_PATH = "./prefix/data.db/"
+
+STARTTLS = False
+
 
 # If persist mode is use, check for thread support.
 
-if args.persist is True:
+if MODE is SyncreplMode.REFRESH_AND_PERSIST:
     try:
         import threading
     except ImportError:
@@ -92,25 +63,16 @@ if args.persist is True:
         print("Please run without --persist, or change your Python.")
         sys.exit(1)
 
-# If the user does not want the directory dump at the end of the refresh phase,
-# then skip it, and instead just print a message marking the occasion.
-# Yes, I'm doing monkey-patching!
-
-if args.nodir is True:
-
-    @classmethod
-    def quiet_refresh_done(cls, items, cursor):
-        print("REFRESH COMPLETE!", file=cls.dest)
-        print("(Directory dump suppressed)", file=cls.dest)
-
-    LoggingCallback.refresh_done = quiet_refresh_done
-
 # Print out prefix and search mode.
 
-print("Data files will be stored here:", args.prefix)
+print("Data files will be stored here:", DATA_PATH)
 
 print(
-    ("Refresh-and-persist" if args.persist is True else "Refresh-only"),
+    (
+        "Refresh-and-persist"
+        if MODE is SyncreplMode.REFRESH_AND_PERSIST
+        else "Refresh-only"
+    ),
     "mode will be used",
 )
 
@@ -118,23 +80,13 @@ print(
 # The arguments are simple, because the LDAP URL contains most of the info.
 
 print("CLIENT SETUP START")
-client = Syncrepl(
-    data_path=args.prefix,
-    callback=LoggingCallback,
-    ldap_url=args.url,
-    mode=(
-        SyncreplMode.REFRESH_AND_PERSIST
-        if args.persist is True
-        else SyncreplMode.REFRESH_ONLY
-    ),
-    starttls=args.starttls,
-    trace_level=(5 if args.trace is True else 0),
-)
+client = Syncrepl(DATA_PATH, LoggingCallback, LDAP_INFO, STARTTLS)
+
 print("CLIENT SETUP COMPLETE!")
 
 # What we do now depends on our mode.
 
-if args.persist is True:
+if MODE is SyncreplMode.REFRESH_AND_PERSIST:
     # In persist mode, we should use threading.
     # Out main thread will watch for signals, and safely stop the Syncrepl.
 
@@ -190,7 +142,7 @@ else:
 # Clean up and exit
 
 print("CLIENT EXIT START")
-if args.persist is True:
+if MODE is SyncreplMode.REFRESH_AND_PERSIST:
     client.db_reconnect()
 client.unbind()
 print("CLIENT EXIT COMPLETE!")
