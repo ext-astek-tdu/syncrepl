@@ -15,3 +15,7 @@ build
 dist
 syncrepl_client.egg-info
 /prefix/*
+
+**/__pycache__/
+.venv/
+.mypy_cache/
