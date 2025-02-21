@@ -1,0 +1,63 @@
+dn: dc=openldapprov,dc=com
+objectClass: dcObject
+objectClass: organization
+dc: openldapprov
+o: example
+
+dn: ou=users,dc=openldapprov,dc=com
+objectClass: organizationalUnit
+ou: users
+
+
+dn: uid=tim.berners-lee,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Tim Berners-Lee
+sn: Berners-Lee
+uid: tim.berners-lee
+userPassword: tim.berners-lee
+description: Inventor of the World Wide Web.
+
+
+dn: uid=grace.hopper,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Grace Hopper
+sn: Hopper
+uid: grace.hopper
+userPassword: grace.hopper
+description: Pioneer in computer programming, developed the first compiler.
+
+
+dn: uid=ada.lovelace,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Ada Lovelace
+sn: Lovelace
+uid: ada.lovelace
+userPassword: ada.lovelace
+description: Mathematician, often credited as the first computer programmer.
+
+
+dn: uid=margaret.hamilton,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Margaret Hamilton
+sn: Hamilton
+uid: margaret.hamilton
+userPassword: margaret.hamilton
+description: Led software development for Apollo space missions.
+
+
+dn: uid=dennis.ritchie,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Dennis Ritchie
+sn: Ritchie
+uid: dennis.ritchie
+userPassword: dennis.ritchie
+description: Creator of the C programming language and Unix pioneer.
+
+
+dn: uid=alan.turing,ou=users,dc=openldapprov,dc=com
+objectClass: inetOrgPerson
+cn: Alan Turing
+sn: Turing
+uid: alan.turing
+userPassword: alan.turing
+description: Mathematician and cryptanalyst, key figure in modern computing.
