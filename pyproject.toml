@@ -13,6 +13,7 @@ isort = "^6.0.0"
 black = "^25.1.0"
 pylint = "^3.3.4"
 behave = "^1.2.6"
+docker = "^7.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

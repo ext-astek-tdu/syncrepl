@@ -29,3 +29,7 @@ Additionally, the client should allow the specification of filters and search sc
 To effectively test the client, we need a set of LDIF files representing different test scenarios:
 
 We need a basic LDIF file that tests could run on it.
+
+## Method to keep track of ldap changes
+
+We should have a custom callback class that register every changes from the openLDAP server.

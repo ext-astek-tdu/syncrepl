@@ -1,7 +1,8 @@
 from behave import *
-from behave import given, when, then # pylint: disable=no-name-in-module
+from behave import given, when, then  # pylint: disable=no-name-in-module
 
 from behave.runner import Context
+
 
 @given("Client is not bind to LDAP server")
 def client_is_not_bind(context: Context) -> None:

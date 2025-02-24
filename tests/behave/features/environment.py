@@ -1,4 +1,14 @@
-def before_all(context):
+from behave.runner import Context
+from behave.model import Scenario  # , Feature
+
+from tests.behave.common.docker_tools import (
+    start_openldap,
+    stop_openldap,
+    wait_for_ldap_server_to_be_ready,
+)
+
+
+def before_all(context: Context) -> None:
     """Executes setup operations before all tests.
 
     Checks if the environment is defined in userdata. If not, it defaults to 'local'.
@@ -7,9 +17,10 @@ def before_all(context):
     :param context: Global context containing test configuration information.
     :type context: Context
     """
+    stop_openldap()
 
 
-def after_all(context):
+def after_all(context: Context) -> None:
     """Executes cleanup operations after all tests have finished.
 
     :param context: Global context containing test configuration information.
@@ -17,31 +28,7 @@ def after_all(context):
     """
 
 
-def before_feature(context, feature):
-    """Executes setup operations before each feature.
-
-    Retrieves the first tag of the feature being executed and assigns it to the context.
-
-    :param context: Global context containing test configuration information.
-    :type context: Context
-    :param feature: Object representing the feature being executed.
-    :type feature: Feature
-    """
-
-
-def after_feature(context, feature):
-    """Executes cleanup operations after each feature.
-
-    Performs necessary teardown tasks after a feature has completed execution.
-
-    :param context: Global context containing test configuration information.
-    :type context: Context
-    :param feature: Object representing the feature that was executed.
-    :type feature: Feature
-    """
-
-
-def before_scenario(context, scenario):
+def before_scenario(context: Context, scenario: Scenario) -> None:
     """Executes setup operations before each scenario.
 
     Creates a directory to store the scenario logs and clears its contents if it already exists.
@@ -51,9 +38,11 @@ def before_scenario(context, scenario):
     :param scenario: Object representing the scenario being executed (tags, etc.).
     :type scenario: Scenario
     """
+    container = start_openldap()
+    wait_for_ldap_server_to_be_ready()
 
 
-def after_scenario(context, scenario):
+def after_scenario(context: Context, scenario: Scenario) -> None:
     """Executes cleanup operations after each scenario.
 
     Ensures any temporary data created during the scenario execution is removed.
@@ -63,3 +52,28 @@ def after_scenario(context, scenario):
     :param scenario: Object representing the scenario that was executed.
     :type scenario: Scenario
     """
+    stop_openldap()
+
+
+# def before_feature(context: Context, feature: Feature) -> None:
+#     """Executes setup operations before each feature.
+
+#     Retrieves the first tag of the feature being executed and assigns it to the context.
+
+#     :param context: Global context containing test configuration information.
+#     :type context: Context
+#     :param feature: Object representing the feature being executed.
+#     :type feature: Feature
+#     """
+
+
+# def after_feature(context: Context, feature: Feature) -> None:
+#     """Executes cleanup operations after each feature.
+
+#     Performs necessary teardown tasks after a feature has completed execution.
+
+#     :param context: Global context containing test configuration information.
+#     :type context: Context
+#     :param feature: Object representing the feature that was executed.
+#     :type feature: Feature
+#     """
