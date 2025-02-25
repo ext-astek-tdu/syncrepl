@@ -15,3 +15,4 @@ services:
       - LDAP_ENABLE_SYNCPROV=yes
     volumes:
         - ./ldifs:/ldifs
+        - ./behaveldifs:/behaveldifs

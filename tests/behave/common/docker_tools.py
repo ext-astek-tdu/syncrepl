@@ -9,7 +9,8 @@ import docker
 from docker.models.containers import Container
 
 CONTAINER_NAME = "behave_open_ldap_prov"
-LDIF_PATH = os.path.abspath("./ldifs")
+LDIF_PATH = os.path.abspath("./tests/ldifs")
+ACTIONS_LDIF_PATH = os.path.abspath("./tests/actions_ldifs")
 MAX_WAITING_SECONDS = 5
 COOLDOWN = 0.2
 
@@ -42,10 +43,15 @@ def start_openldap() -> Container:
         },
         ports={"1389/tcp": 389, "1636/tcp": 636},
         auto_remove=True,
-        volumes={LDIF_PATH: {"bind": "/ldifs"}},
+        volumes={
+            LDIF_PATH: {"bind": "/ldifs"},
+            ACTIONS_LDIF_PATH: {"bind": "/actions_ldifs"},
+        },
         detach=True,
     )
     print(f"OpenLDAP started with ID : {container.id}")
+
+    wait_for_ldap_server_to_be_ready()
     return container
 
 

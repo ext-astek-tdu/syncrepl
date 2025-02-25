@@ -1,11 +1,14 @@
+"""Environement file from behave framework"""
+
 from behave.runner import Context
 from behave.model import Scenario  # , Feature
 
 from tests.behave.common.docker_tools import (
     start_openldap,
     stop_openldap,
-    wait_for_ldap_server_to_be_ready,
 )
+from tests.behave.common.singleton import Singleton
+from tests.behave.common.virtual_user_client import VirtualUserClient
 
 
 def before_all(context: Context) -> None:
@@ -38,8 +41,11 @@ def before_scenario(context: Context, scenario: Scenario) -> None:
     :param scenario: Object representing the scenario being executed (tags, etc.).
     :type scenario: Scenario
     """
-    container = start_openldap()
-    wait_for_ldap_server_to_be_ready()
+    ldap_container = start_openldap()
+    vc = VirtualUserClient()
+    Singleton.ldap_container = ldap_container
+    Singleton.virtual_user_client = vc
+
 
 
 def after_scenario(context: Context, scenario: Scenario) -> None:
