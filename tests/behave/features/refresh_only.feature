@@ -5,6 +5,7 @@ Feature: TODO: Find title
     When Client connect to "ldap://localhost:389/cn=admin,dc=openldapprov,dc=com??sub?(objectClass=*),X-BINDPW=admin" on "REFRESH_ONLY" mode
     Then Client has been binded to LDAP server
 
+  @connect_with_ldap_info
   Scenario Outline: I want my syncrepl client to bind to an openLDAP server with LDAPInfo object
     Given Client is not bind to LDAP server
     When Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
@@ -15,8 +16,10 @@ Feature: TODO: Find title
   
   Scenario Outline: I want my syncrepl client to detect an addition
     Given Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     When I do a "ldapadd" on the openLDAP serveur, with this ldif file "addition.ldif"
     And  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     Then Client changed his infos according to ldif file  "addition.ldif"
     Examples:
       | dn                     | bind_dn                         | psswd | filter          | scope         | mode         |
@@ -24,8 +27,10 @@ Feature: TODO: Find title
   
   Scenario Outline: I want my syncrepl client to detect a deletion
     Given  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     When I do a "ldapdelete" on the openLDAP serveur, with this ldif file "deletion.ldif"
     And  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     Then Client changed his infos according to ldif file  "deletion.ldif"
     Examples:
       | dn                     | bind_dn                         | psswd | filter          | scope         | mode         |
@@ -34,7 +39,9 @@ Feature: TODO: Find title
   Scenario Outline: I want my syncrepl client to detect a renaming
     Given  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
     When I do a "ldapmodify" on the openLDAP serveur, with this ldif file "renaming.ldif"
+    And I wait for the client to poll all infos
     And  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     Then Client changed his infos according to ldif file "renaming.ldif"
     Examples:
       | dn                     | bind_dn                         | psswd | filter          | scope         | mode         |
@@ -43,7 +50,9 @@ Feature: TODO: Find title
   Scenario Outline: I want my syncrepl client to detect a modification
     Given  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
     When I do a "ldapmodify" on the openLDAP serveur, with this ldif file "modification.ldif"
+    And I wait for the client to poll all infos
     And  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+    And I wait for the client to poll all infos
     Then Client changed his infos according to ldif file "modification.ldif"
     Examples:
       | dn                     | bind_dn                         | psswd | filter          | scope         | mode         |
@@ -51,7 +60,9 @@ Feature: TODO: Find title
     
   # Scenario Outline: I want my syncrepl client to detect a cookie update
   #   Given  Client connect to dn:"<dn>" as bind_dn:"<bind_dn>" password:"<psswd>" filter:"<filter>" scope: "<scope>" mode:"<mode>"
+  #   And I wait for the client to poll all infos
   #   When I do a "ldapmodify" on the openLDAP serveur, with this ldif file "cookie_update.ldif"
+  #   And I wait for the client to poll all infos
   #   Then Client changed his infos according to ldif file "cookie_update.ldif"
   #   Examples:
   #     | dn                     | bind_dn                         | psswd | filter          | scope         | mode         |

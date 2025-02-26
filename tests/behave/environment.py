@@ -34,31 +34,31 @@ def after_all(context: Context) -> None:
 def before_scenario(context: Context, scenario: Scenario) -> None:
     """Executes setup operations before each scenario.
 
-    Creates a directory to store the scenario logs and clears its contents if it already exists.
+    Set up all potential needed object.
 
     :param context: Global context containing test configuration information.
     :type context: Context
     :param scenario: Object representing the scenario being executed (tags, etc.).
     :type scenario: Scenario
     """
+    Singleton.virtual_user_client = VirtualUserClient()
     ldap_container = start_openldap()
-    vc = VirtualUserClient()
     Singleton.ldap_container = ldap_container
-    Singleton.virtual_user_client = vc
 
 
 
-def after_scenario(context: Context, scenario: Scenario) -> None:
-    """Executes cleanup operations after each scenario.
+# def after_scenario(context: Context, scenario: Scenario) -> None:
+#     """Executes cleanup operations after each scenario.
 
-    Ensures any temporary data created during the scenario execution is removed.
+#     Delete all potential used object
 
-    :param context: Global context containing test configuration information.
-    :type context: Context
-    :param scenario: Object representing the scenario that was executed.
-    :type scenario: Scenario
-    """
-    stop_openldap()
+#     :param context: Global context containing test configuration information.
+#     :type context: Context
+#     :param scenario: Object representing the scenario that was executed.
+#     :type scenario: Scenario
+#     """
+#     Singleton.virtual_user_client.stop_client()
+#     stop_openldap()
 
 
 # def before_feature(context: Context, feature: Feature) -> None:
